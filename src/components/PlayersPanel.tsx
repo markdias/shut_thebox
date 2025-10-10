@@ -1,6 +1,4 @@
 import { ChangeEvent } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Crown, MinusCircle, UserPlus2 } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
 function PlayersPanel() {
@@ -10,6 +8,7 @@ function PlayersPanel() {
   const updatePlayerName = useGameStore((state) => state.updatePlayerName);
   const phase = useGameStore((state) => state.phase);
   const turn = useGameStore((state) => state.turn);
+  const options = useGameStore((state) => state.options);
 
   const handleNameChange = (id: string) => (event: ChangeEvent<HTMLInputElement>) => {
     updatePlayerName(id, event.target.value);
@@ -23,63 +22,40 @@ function PlayersPanel() {
       </header>
       <div className="panel-body">
         <ul className="player-list">
-          <AnimatePresence initial={false}>
-            {players.map((player, index) => {
-              const isActive = phase === 'inProgress' && turn?.playerIndex === index;
-              const hasPlayed = player.lastScore !== null;
-              const statusLabel = hasPlayed
-                ? player.lastScore === 0
-                  ? 'Shut the box!'
-                  : `Score: ${player.lastScore}`
-                : 'Awaiting turn';
-              const showWinnerBadge = phase === 'finished' && player.lastScore === 0;
-              return (
-                <motion.li
-                  key={player.id}
-                  className={isActive ? 'active' : undefined}
-                  layout
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 12 }}
-                  transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-                >
-                  <div className="player-row">
-                    <input
-                      value={player.name}
-                      onChange={handleNameChange(player.id)}
-                      aria-label={`Rename ${player.name}`}
-                    />
-                    <button
-                      type="button"
-                      className="ghost icon-button"
-                      onClick={() => removePlayer(player.id)}
-                      disabled={players.length === 1 || phase !== 'setup'}
-                      aria-label={`Remove ${player.name}`}
-                    >
-                      <MinusCircle size={16} />
-                    </button>
-                  </div>
-                  <div className="player-stats">
-                    <span>{statusLabel}</span>
-                    {showWinnerBadge && (
-                      <span className="badge with-icon">
-                        <Crown size={12} aria-hidden />
-                        Winner
-                      </span>
-                    )}
-                  </div>
-                </motion.li>
-              );
-            })}
-          </AnimatePresence>
+          {players.map((player, index) => {
+            const isActive = phase === 'inProgress' && turn?.playerIndex === index;
+            return (
+              <li key={player.id} className={isActive ? 'active' : undefined}>
+                <div className="player-row">
+                  <input
+                    value={player.name}
+                    onChange={handleNameChange(player.id)}
+                    disabled={phase !== 'setup'}
+                  />
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => removePlayer(player.id)}
+                    disabled={players.length === 1 || phase !== 'setup'}
+                    aria-label={`Remove ${player.name}`}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="player-stats">
+                  <span>Last: {player.lastScore ?? '—'}</span>
+                  <span>
+                    {options.scoring === 'target' ? 'Total' : 'Score'}:{' '}
+                    {options.scoring === 'target'
+                      ? player.totalScore
+                      : player.lastScore ?? '—'}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
         </ul>
-        <button
-          type="button"
-          className="secondary icon-button"
-          onClick={addPlayer}
-          disabled={phase !== 'setup'}
-        >
-          <UserPlus2 size={16} />
+        <button type="button" className="secondary" onClick={addPlayer} disabled={phase !== 'setup'}>
           Add player
         </button>
       </div>

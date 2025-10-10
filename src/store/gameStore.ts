@@ -1,20 +1,13 @@
 import { create } from 'zustand';
 import { GameOptions, GamePhase, Player, TurnState } from '../types';
 import { generateTileCombos, isSameCombo } from '../utils/combinations';
-import { canUseOneDie, createInitialTiles, sumTiles } from '../utils/gameLogic';
+import { canUseOneDie, createInitialTiles, shouldInstantWin, sumTiles } from '../utils/gameLogic';
 import { createId } from '../utils/id';
-
-type LogResult = 'info' | 'win' | 'loss';
 
 interface GameLogEntry {
   id: string;
   message: string;
   timestamp: number;
-  playerId?: string;
-  playerName?: string;
-  score?: number;
-  round?: number;
-  result: LogResult;
 }
 
 interface GameStore {
@@ -57,8 +50,11 @@ function createDefaultPlayers(): Player[] {
 }
 
 const defaultOptions: GameOptions = {
-  maxTile: 12,
-  oneDieRule: 'after789'
+  maxTile: 9,
+  oneDieRule: 'after789',
+  scoring: 'lowest',
+  targetScore: 100,
+  instantWinOnShut: true
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -66,7 +62,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   options: defaultOptions,
   tilesOpen: createInitialTiles(defaultOptions.maxTile),
   players: createDefaultPlayers(),
-  round: 0,
+  round: 1,
   turn: null,
   logs: [],
   winnerIds: [],
@@ -79,6 +75,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ...state.options,
         [key]: value
       } as GameOptions;
+
+      if (key === 'scoring' && value === 'instant') {
+        nextOptions.instantWinOnShut = true;
+      }
 
       if (key === 'maxTile' && state.phase !== 'inProgress') {
         return {
@@ -123,12 +123,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     })),
   clearHistory: () => set({ logs: [] }),
   startGame: () => {
-    const { options, players, round: currentRound, logs } = get();
-    const nextRound = currentRound + 1;
+    const { options, players } = get();
     const sanitizedPlayers = players.map((player, index) => ({
       ...player,
       name: player.name.trim() || `Player ${index + 1}`,
-      totalScore: 0,
+      totalScore: options.scoring === 'target' ? player.totalScore : 0,
       lastScore: null
     }));
 
@@ -138,7 +137,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase: 'inProgress',
       tilesOpen: initialTiles,
       players: sanitizedPlayers,
-      round: nextRound,
+      round: options.scoring === 'target' ? get().round : 1,
       turn: {
         playerIndex: 0,
         dice: [],
@@ -149,16 +148,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         canRollOneDie: canUseOneDie(initialTiles, options),
         finished: false
       },
-      logs: [
-        ...logs,
-        {
-          id: createId(),
-          message: 'New game started — aim to shut all 12 tiles!',
-          timestamp: Date.now(),
-          result: 'info',
-          round: nextRound
-        }
-      ],
+      logs: [],
       winnerIds: [],
       bestMove: null
     });
@@ -273,6 +263,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const playerIndex = turn.playerIndex;
 
     const turnFinished = remainingTiles.length === 0;
+    const instantWin = shouldInstantWin(remainingTiles, options);
 
     set({
       tilesOpen: remainingTiles,
@@ -293,7 +284,46 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }));
 
     if (turnFinished) {
-      get().endTurn();
+      const remainder = sumTiles(remainingTiles);
+      set((stateAfter) => {
+        const updatedPlayers = stateAfter.players.map((player, index) =>
+          index === playerIndex
+            ? {
+                ...player,
+                lastScore: remainder,
+                totalScore:
+                  stateAfter.options.scoring === 'target'
+                    ? player.totalScore + remainder
+                    : remainder
+              }
+            : player
+        );
+        const endMessage = `${updatedPlayers[playerIndex].name} shut the box!`;
+
+        return {
+          players: updatedPlayers,
+          logs: [
+            ...stateAfter.logs,
+            {
+              id: createId(),
+              message: endMessage,
+              timestamp: Date.now()
+            }
+          ]
+        };
+      });
+
+      if (instantWin) {
+        set((stateAfter) => ({
+          phase: 'finished',
+          winnerIds: [stateAfter.players[playerIndex].id],
+          turn: stateAfter.turn
+            ? { ...stateAfter.turn, finished: true }
+            : stateAfter.turn
+        }));
+      } else {
+        get().endTurn();
+      }
     }
   },
   endTurn: () => {
@@ -304,28 +334,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     const remainder = sumTiles(tilesOpen);
-    const shutTheBox = tilesOpen.length === 0;
     const updatedPlayers = state.players.map((player, index) =>
       index === turn.playerIndex
         ? {
             ...player,
             lastScore: remainder,
-            totalScore: remainder
+            totalScore:
+              options.scoring === 'target'
+                ? player.totalScore + remainder
+                : remainder
           }
         : player
     );
 
     const logEntry: GameLogEntry = {
       id: createId(),
-      message: shutTheBox
-        ? `${updatedPlayers[turn.playerIndex].name} shut the box!`
-        : `${updatedPlayers[turn.playerIndex].name} scores ${remainder}.`,
-      timestamp: Date.now(),
-      playerId: updatedPlayers[turn.playerIndex].id,
-      playerName: updatedPlayers[turn.playerIndex].name,
-      score: remainder,
-      round: state.round,
-      result: shutTheBox ? 'win' : 'loss'
+      message:
+        turn.rolled && turn.selectableCombos.length === 0
+          ? `${updatedPlayers[turn.playerIndex].name} had no moves and scored ${remainder}.`
+          : `${updatedPlayers[turn.playerIndex].name} ends the turn with ${remainder}.`,
+      timestamp: Date.now()
     };
 
     const nextPlayerIndex = turn.playerIndex + 1;
@@ -338,31 +366,71 @@ export const useGameStore = create<GameStore>((set, get) => ({
       bestMove: null
     };
 
-    if (isLastPlayer) {
-      const winnerIds = updatedPlayers
-        .filter((player) => player.lastScore === 0)
-        .map((player) => player.id);
-      Object.assign(newState, {
-        phase: 'finished',
-        winnerIds,
-        turn: null
-      });
+    if (options.scoring === 'lowest') {
+      if (isLastPlayer) {
+        const minScore = Math.min(
+          ...updatedPlayers.map((player) => player.lastScore ?? Infinity)
+        );
+        const winnerIds = updatedPlayers
+          .filter((player) => player.lastScore === minScore)
+          .map((player) => player.id);
+        Object.assign(newState, {
+          phase: 'finished',
+          winnerIds,
+          turn: null
+        });
+      } else {
+        Object.assign(newState, {
+          turn: {
+            playerIndex: nextPlayerIndex,
+            dice: [],
+            rolled: false,
+            selectableCombos: [],
+            selectedTiles: [],
+            history: [],
+            canRollOneDie: canUseOneDie(
+              createInitialTiles(options.maxTile),
+              options
+            ),
+            finished: false
+          }
+        });
+      }
     } else {
-      Object.assign(newState, {
-        turn: {
-          playerIndex: nextPlayerIndex,
-          dice: [],
-          rolled: false,
-          selectableCombos: [],
-          selectedTiles: [],
-          history: [],
-          canRollOneDie: canUseOneDie(
-            createInitialTiles(options.maxTile),
-            options
-          ),
-          finished: false
-        }
-      });
+      const targetReached =
+        options.scoring === 'target' &&
+        updatedPlayers.some((player) => player.totalScore >= options.targetScore);
+      if (targetReached) {
+        const minTotal = Math.min(
+          ...updatedPlayers.map((player) => player.totalScore)
+        );
+        const winnerIds = updatedPlayers
+          .filter((player) => player.totalScore === minTotal)
+          .map((player) => player.id);
+        Object.assign(newState, {
+          phase: 'finished',
+          winnerIds,
+          turn: null
+        });
+      } else {
+        const nextIndex = isLastPlayer ? 0 : nextPlayerIndex;
+        Object.assign(newState, {
+          round: isLastPlayer ? state.round + 1 : state.round,
+          turn: {
+            playerIndex: nextIndex,
+            dice: [],
+            rolled: false,
+            selectableCombos: [],
+            selectedTiles: [],
+            history: [],
+            canRollOneDie: canUseOneDie(
+              createInitialTiles(options.maxTile),
+              options
+            ),
+            finished: false
+          }
+        });
+      }
     }
 
     set(newState);
@@ -377,7 +445,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       logs: [],
       winnerIds: [],
       bestMove: null,
-      round: 0,
+      round: 1,
       players: state.players.map((player, index) => ({
         ...player,
         name: player.name.trim() || `Player ${index + 1}`,

@@ -1,7 +1,5 @@
 import classNames from 'classnames';
 import { useMemo } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Dice1, Dice2, Wand2, Sparkles } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 import { createInitialTiles } from '../utils/gameLogic';
 
@@ -21,7 +19,7 @@ function TileButton({
   onClick: () => void;
 }) {
   return (
-    <motion.button
+    <button
       type="button"
       className={classNames('tile', {
         open,
@@ -31,13 +29,9 @@ function TileButton({
       })}
       onClick={onClick}
       disabled={!open}
-      whileHover={open ? { translateY: -6 } : undefined}
-      whileTap={open ? { scale: 0.96 } : undefined}
-      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
     >
-      <span className="tile-value">{value}</span>
-      {best && <Sparkles className="tile-spark" size={14} aria-hidden />}
-    </motion.button>
+      {value}
+    </button>
   );
 }
 
@@ -100,40 +94,18 @@ function GameBoard() {
           </p>
         </div>
         <div className="dice-display">
-          <AnimatePresence initial={false} mode="popLayout">
-            {turn?.dice.length ? (
-              <motion.div
-                key={turn.dice.join('-')}
-                className="dice-values"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-              >
-                {turn.dice.map((value, index) => (
-                  <motion.span
-                    key={`${value}-${index}`}
-                    className="die"
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    {value}
-                  </motion.span>
-                ))}
-                <span className="dice-total">= {diceTotal}</span>
-              </motion.div>
-            ) : (
-              <motion.span
-                key="placeholder"
-                className="dice-placeholder"
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 0.85, y: 0 }}
-              >
-                Roll to begin
-              </motion.span>
-            )}
-          </AnimatePresence>
+          {turn?.dice.length ? (
+            <div className="dice-values">
+              {turn.dice.map((value, index) => (
+                <span key={`${value}-${index}`} className="die">
+                  {value}
+                </span>
+              ))}
+              <span className="dice-total">= {diceTotal}</span>
+            </div>
+          ) : (
+            <span className="dice-placeholder">Roll to begin</span>
+          )}
         </div>
       </header>
 
@@ -164,40 +136,36 @@ function GameBoard() {
           <div className="roll-buttons">
             <button
               type="button"
-              className="primary icon-button"
+              className="primary"
               onClick={() => rollDice(2)}
               disabled={!canRoll}
             >
-              <Dice2 size={16} />
               Roll two dice
             </button>
             <button
               type="button"
-              className="secondary icon-button"
+              className="secondary"
               onClick={() => rollDice(1)}
               disabled={!canRoll || !turn?.canRollOneDie}
             >
-              <Dice1 size={16} />
               Roll one die
             </button>
           </div>
           <div className="move-buttons">
             <button
               type="button"
-              className="primary icon-button"
+              className="primary"
               onClick={confirmMove}
               disabled={!canConfirm}
             >
-              <Wand2 size={16} />
               Confirm move
             </button>
             <button
               type="button"
-              className="secondary icon-button"
+              className="secondary"
               onClick={resetSelection}
               disabled={!hasSelection}
             >
-              <Sparkles size={16} />
               Clear selection
             </button>
             <button type="button" className="ghost" onClick={endTurn} disabled={phase !== 'inProgress'}>
@@ -210,29 +178,13 @@ function GameBoard() {
           <div className="combo-list">
             <h3>Available combinations</h3>
             <ul>
-              <AnimatePresence initial={false}>
-                {selectableCombos.map((combo, index) => {
-                  const comboKey = `${combo.join('-')}-${index}`;
-                  const isBest =
-                    showHints &&
-                    bestMove &&
-                    combo.length === bestMove.length &&
-                    combo.every((value) => bestMove.includes(value));
-                  return (
-                    <motion.li
-                      key={comboKey}
-                      layout
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 8 }}
-                      transition={{ type: 'spring', stiffness: 320, damping: 25 }}
-                    >
-                      <span>{combo.join(' + ')}</span>
-                      {isBest && <span className="badge">Best</span>}
-                    </motion.li>
-                  );
-                })}
-              </AnimatePresence>
+              {selectableCombos.map((combo, index) => (
+                <li key={`${combo.join('-')}-${index}`}>
+                  {combo.join(' + ')}
+                  {showHints && bestMove && combo.length === bestMove.length &&
+                    combo.every((value) => bestMove.includes(value)) && <span className="badge">Best</span>}
+                </li>
+              ))}
             </ul>
           </div>
         ) : (

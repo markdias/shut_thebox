@@ -12,9 +12,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zustand": "^4.5.2",
-    "classnames": "^2.5.1",
-    "framer-motion": "^11.0.3",
-    "lucide-react": "^0.417.0"
+    "classnames": "^2.5.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.21",
