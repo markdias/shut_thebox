@@ -27,3 +27,7 @@ export function canUseOneDie(openTiles: number[], options: GameOptions): boolean
 
   return false;
 }
+
+export function shouldInstantWin(openTiles: number[], options: GameOptions): boolean {
+  return options.instantWinOnShut && openTiles.length === 0;
+}

@@ -1,8 +1,12 @@
 export type OneDieRule = 'after789' | 'totalUnder6' | 'never';
+export type ScoringMode = 'lowest' | 'target' | 'instant';
 
 export interface GameOptions {
-  maxTile: 12;
+  maxTile: 9 | 10 | 12;
   oneDieRule: OneDieRule;
+  scoring: ScoringMode;
+  targetScore: number;
+  instantWinOnShut: boolean;
 }
 
 export interface Player {

@@ -8,6 +8,7 @@ function PlayersPanel() {
   const updatePlayerName = useGameStore((state) => state.updatePlayerName);
   const phase = useGameStore((state) => state.phase);
   const turn = useGameStore((state) => state.turn);
+  const options = useGameStore((state) => state.options);
 
   const handleNameChange = (id: string) => (event: ChangeEvent<HTMLInputElement>) => {
     updatePlayerName(id, event.target.value);
@@ -23,19 +24,13 @@ function PlayersPanel() {
         <ul className="player-list">
           {players.map((player, index) => {
             const isActive = phase === 'inProgress' && turn?.playerIndex === index;
-            const hasPlayed = player.lastScore !== null;
-            const statusLabel = hasPlayed
-              ? player.lastScore === 0
-                ? 'Shut the box!'
-                : `Score: ${player.lastScore}`
-              : 'Awaiting turn';
             return (
               <li key={player.id} className={isActive ? 'active' : undefined}>
                 <div className="player-row">
                   <input
                     value={player.name}
                     onChange={handleNameChange(player.id)}
-                    aria-label={`Rename ${player.name}`}
+                    disabled={phase !== 'setup'}
                   />
                   <button
                     type="button"
@@ -48,10 +43,13 @@ function PlayersPanel() {
                   </button>
                 </div>
                 <div className="player-stats">
-                  <span>{statusLabel}</span>
-                  {phase === 'finished' && player.lastScore === 0 && (
-                    <span className="badge">Winner</span>
-                  )}
+                  <span>Last: {player.lastScore ?? '—'}</span>
+                  <span>
+                    {options.scoring === 'target' ? 'Total' : 'Score'}:{' '}
+                    {options.scoring === 'target'
+                      ? player.totalScore
+                      : player.lastScore ?? '—'}
+                  </span>
                 </div>
               </li>
             );

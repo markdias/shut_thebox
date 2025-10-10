@@ -21,13 +21,6 @@ function App() {
     [players, winnerIds]
   );
 
-  const bestScore = useMemo(() => {
-    const scores = players
-      .map((player) => player.lastScore)
-      .filter((score): score is number => typeof score === 'number');
-    return scores.length ? Math.min(...scores) : null;
-  }, [players]);
-
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -50,19 +43,13 @@ function App() {
         </div>
       </header>
 
-      {phase === 'finished' && (
+      {phase === 'finished' && winners.length > 0 && (
         <div className="winner-banner">
-          {winners.length > 0 ? (
-            <strong>
-              {winners.length === 1
-                ? `${winners[0].name} shut the box!`
-                : `${winners.map((player) => player.name).join(', ')} shut the box!`}
-            </strong>
-          ) : (
-            <strong>
-              No winners this round. Best score: {bestScore ?? '—'}
-            </strong>
-          )}
+          <strong>
+            {winners.length === 1
+              ? `${winners[0].name} wins!`
+              : `${winners.map((player) => player.name).join(', ')} tie for the win!`}
+          </strong>
         </div>
       )}
 

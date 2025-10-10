@@ -1,6 +1,6 @@
 # Shut the Box
 
-A TypeScript + React implementation of the classic pub game "Shut the Box". Rally a table of friends, roll the dice, and try to close every tile from 1 through 12 before you run out of moves.
+A TypeScript + React implementation of the classic pub game "Shut the Box". Configure tile ranges, scoring, and the one-die rule, then take turns closing tiles until somebody shuts the box or the lowest score wins.
 
 ## Getting started
 
@@ -13,11 +13,12 @@ This launches Vite's development server (default port `5173`). Open the printed 
 
 ## Game features
 
-- Tiles 1–12 only — the box is only shut when every tile is closed.
+- Tile ranges: 1–9, 1–10, or 1–12.
 - Any number of hot-seat players with editable names.
 - Configurable one-die rule (after high tiles, when total &lt; 6, or never).
+- Scoring modes: lowest single-round remainder, cumulative race to a target, or instant win on a shut box.
 - Automatic detection of legal tile combinations for each roll, including highlights and optional "best move" hints.
-- Score log that records every turn with win/loss styling and timestamps.
+- History log of every turn and instant win shout-outs.
 
 ## Project structure
 
