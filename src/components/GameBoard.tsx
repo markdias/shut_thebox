@@ -56,10 +56,12 @@ function GameBoard() {
   const diceTotal = turn?.dice.reduce((sum, value) => sum + value, 0) ?? 0;
   const selectedTiles = turn?.selectedTiles ?? [];
   const selectableCombos = turn?.selectableCombos ?? [];
+  const tilesRemaining = tilesOpen.length;
   const hasSelection = selectedTiles.length > 0;
   const selectionMatchesTotal =
     diceTotal > 0 &&
     selectedTiles.reduce((sum, value) => sum + value, 0) === diceTotal;
+  const selectedTotal = selectedTiles.reduce((sum, value) => sum + value, 0);
 
   const legalSelection =
     selectionMatchesTotal &&
@@ -86,6 +88,7 @@ function GameBoard() {
     <section className="panel board">
       <header className="panel-header">
         <div>
+          <span className="panel-kicker">Roll. React. Shut the box.</span>
           <h2>Board</h2>
           <p>
             {phase === 'setup'
@@ -94,6 +97,7 @@ function GameBoard() {
           </p>
         </div>
         <div className="dice-display">
+          <span className="dice-label">Current roll</span>
           {turn?.dice.length ? (
             <div className="dice-values">
               {turn.dice.map((value, index) => (
@@ -110,6 +114,30 @@ function GameBoard() {
       </header>
 
       <div className="panel-body">
+        <div className="board-status-grid">
+          <div className="status-card">
+            <span className="status-card-label">Tiles in play</span>
+            <span className="status-card-value">{tilesRemaining}</span>
+          </div>
+          <div className="status-card">
+            <span className="status-card-label">Selected total</span>
+            <span className="status-card-value">
+              {selectedTotal > 0 ? `${selectedTotal}${diceTotal ? ` / ${diceTotal}` : ''}` : '—'}
+            </span>
+          </div>
+          <div
+            className={classNames('status-card', {
+              'status-card-accent': showHints && !!bestMove,
+              'status-card-alert': turn?.rolled && selectableCombos.length === 0
+            })}
+          >
+            <span className="status-card-label">Valid combos</span>
+            <span className="status-card-value">
+              {turn?.rolled ? selectableCombos.length : 'Roll first'}
+            </span>
+          </div>
+        </div>
+
         <div className="tiles-grid">
           {allTiles.map((tile) => {
             const open = tilesOpen.includes(tile);
@@ -176,7 +204,10 @@ function GameBoard() {
 
         {selectableCombos.length ? (
           <div className="combo-list">
-            <h3>Available combinations</h3>
+            <div className="combo-header">
+              <h3>Available combinations</h3>
+              <span className="combo-count">{selectableCombos.length}</span>
+            </div>
             <ul>
               {selectableCombos.map((combo, index) => (
                 <li key={`${combo.join('-')}-${index}`}>
@@ -189,7 +220,10 @@ function GameBoard() {
           </div>
         ) : (
           <div className="combo-list">
-            <h3>Available combinations</h3>
+            <div className="combo-header">
+              <h3>Available combinations</h3>
+              <span className="combo-count muted">0</span>
+            </div>
             <p className="muted">Roll the dice to see your options.</p>
           </div>
         )}
