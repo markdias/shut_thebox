@@ -32,7 +32,8 @@ function SettingsPanel() {
             value={options.theme}
             options={[
               { value: 'neon', label: 'Neon glow' },
-              { value: 'matrix', label: 'Matrix grid' }
+              { value: 'matrix', label: 'Matrix grid' },
+              { value: 'classic', label: 'Classic wood' }
             ]}
             onChange={(nextValue) => setOption('theme', nextValue as GameOptions['theme'])}
           />
