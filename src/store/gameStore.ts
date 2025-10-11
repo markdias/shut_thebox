@@ -20,17 +20,20 @@ interface GameStore {
   turn: TurnState | null;
   logs: GameLogEntry[];
   winnerIds: string[];
+  previousWinnerIds: string[];
   settingsOpen: boolean;
   showHints: boolean;
   historyVisible: boolean;
   bestMove: number[] | null;
   unfinishedCounts: Record<string, number>;
   pendingTurn: TurnState | null;
+  pendingTiles: number[] | null;
   waitingForNext: boolean;
   setOption: <K extends keyof GameOptions>(key: K, value: GameOptions[K]) => void;
   addPlayer: () => void;
   removePlayer: (id: string) => void;
   updatePlayerName: (id: string, name: string) => void;
+  togglePlayerHints: (id: string) => void;
   toggleSettings: (open: boolean) => void;
   toggleHints: () => void;
   toggleHistory: (open: boolean) => void;
@@ -51,13 +54,14 @@ function createDefaultPlayers(): Player[] {
       id: createId(),
       name: 'Player 1',
       totalScore: 0,
-      lastScore: null
+      lastScore: null,
+      hintsEnabled: false
     }
   ];
 }
 
 const defaultOptions: GameOptions = {
-  maxTile: 9,
+  maxTile: 12,
   oneDieRule: 'after789',
   scoring: 'lowest',
   targetScore: 100,
@@ -72,7 +76,8 @@ const initialPlayers: Player[] =
         id: player.id ?? createId(),
         name: player.name || `Player ${index + 1}`,
         totalScore: typeof player.totalScore === 'number' ? player.totalScore : 0,
-        lastScore: typeof player.lastScore === 'number' ? player.lastScore : null
+        lastScore: typeof player.lastScore === 'number' ? player.lastScore : null,
+        hintsEnabled: typeof player.hintsEnabled === 'boolean' ? player.hintsEnabled : false
       }))
     : createDefaultPlayers();
 
@@ -84,10 +89,12 @@ const initialUnfinishedCounts = initialPlayers.reduce<Record<string, number>>((a
   return acc;
 }, {});
 
+const initialPreviousWinnerIds = storedSnapshot?.previousWinnerIds ?? [];
+
 export const useGameStore = create<GameStore>((set, get) => {
   const persistScores = () => {
     const state = get();
-    saveScoresSnapshot(state.players, state.round, state.unfinishedCounts);
+    saveScoresSnapshot(state.players, state.round, state.unfinishedCounts, state.previousWinnerIds);
   };
 
   return {
@@ -99,12 +106,14 @@ export const useGameStore = create<GameStore>((set, get) => {
     turn: null,
     logs: [],
     winnerIds: [],
-    settingsOpen: true,
+    previousWinnerIds: initialPreviousWinnerIds,
+    settingsOpen: false,
     showHints: false,
-    historyVisible: true,
+    historyVisible: false,
     bestMove: null,
     unfinishedCounts: initialUnfinishedCounts,
     pendingTurn: null,
+    pendingTiles: null,
     waitingForNext: false,
     setOption: (key, value) =>
       set((state) => {
@@ -135,13 +144,15 @@ export const useGameStore = create<GameStore>((set, get) => {
             id: newId,
             name: `Player ${state.players.length + 1}`,
             totalScore: 0,
-            lastScore: null
+            lastScore: null,
+            hintsEnabled: false
           }
         ],
         unfinishedCounts: {
           ...state.unfinishedCounts,
           [newId]: 0
-        }
+        },
+        round: 1
       }));
       persistScores();
     },
@@ -153,7 +164,8 @@ export const useGameStore = create<GameStore>((set, get) => {
         const { [id]: _removed, ...rest } = state.unfinishedCounts;
         return {
           players: state.players.filter((player) => player.id !== id),
-          unfinishedCounts: rest
+          unfinishedCounts: rest,
+          previousWinnerIds: state.previousWinnerIds.filter((winnerId) => winnerId !== id)
         };
       });
       persistScores();
@@ -166,6 +178,16 @@ export const useGameStore = create<GameStore>((set, get) => {
       }));
       persistScores();
     },
+    togglePlayerHints: (id) => {
+      set((state) => ({
+        players: state.players.map((player) =>
+          player.id === id
+            ? { ...player, hintsEnabled: !player.hintsEnabled }
+            : player
+        )
+      }));
+      persistScores();
+    },
     toggleSettings: (open) => set({ settingsOpen: open }),
     toggleHints: () =>
       set((state) => ({
@@ -173,21 +195,27 @@ export const useGameStore = create<GameStore>((set, get) => {
       })),
     toggleHistory: (open) => set({ historyVisible: open }),
     acknowledgeNextTurn: () => {
-      const { pendingTurn } = get();
+      const { pendingTurn, pendingTiles, options } = get();
       if (!pendingTurn) {
-        set({ waitingForNext: false });
+        set({ waitingForNext: false, pendingTiles: null, pendingTurn: null });
         return;
       }
+      const nextTiles = pendingTiles ?? createInitialTiles(options.maxTile);
       set({
+        tilesOpen: nextTiles,
         turn: pendingTurn,
         pendingTurn: null,
+        pendingTiles: null,
         waitingForNext: false,
         bestMove: null
       });
+      persistScores();
     },
     clearHistory: () => set({ logs: [] }),
     startGame: () => {
-      const { options, players, unfinishedCounts } = get();
+      const state = get();
+      const { options, players, unfinishedCounts, phase, round } = state;
+
       const sanitizedPlayers = players.map((player, index) => ({
         ...player,
         name: player.name.trim() || `Player ${index + 1}`,
@@ -196,18 +224,19 @@ export const useGameStore = create<GameStore>((set, get) => {
       }));
 
       const initialTiles = createInitialTiles(options.maxTile);
-      const syncedCounts = { ...unfinishedCounts };
-      sanitizedPlayers.forEach((player) => {
-        if (syncedCounts[player.id] === undefined) {
-          syncedCounts[player.id] = 0;
-        }
-      });
+      const syncedCounts = sanitizedPlayers.reduce<Record<string, number>>((acc, player) => {
+        acc[player.id] = unfinishedCounts[player.id] ?? 0;
+        return acc;
+      }, {});
+
+      const isNewRound = phase !== 'setup';
+      const nextRound = isNewRound ? round + 1 : 1;
 
       set({
         phase: 'inProgress',
         tilesOpen: initialTiles,
         players: sanitizedPlayers,
-        round: options.scoring === 'target' ? get().round : 1,
+        round: nextRound,
         turn: {
           playerIndex: 0,
           dice: [],
@@ -441,7 +470,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       const nextPlayerIndex = turn.playerIndex + 1;
       const isLastPlayer = nextPlayerIndex >= updatedPlayers.length;
       const baseUpdate: Partial<GameStore> = {
-        tilesOpen: resetTiles,
+        tilesOpen,
         players: updatedPlayers,
         logs: [...state.logs, logEntry],
         bestMove: null,
@@ -449,6 +478,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       };
 
       let pendingTurn: TurnState | null = null;
+      let pendingTiles: number[] | null = null;
 
       const buildPendingTurn = (playerIndex: number): TurnState => ({
         playerIndex,
@@ -473,18 +503,39 @@ export const useGameStore = create<GameStore>((set, get) => {
                   .filter((player) => (player.lastScore ?? Number.POSITIVE_INFINITY) === minScore)
                   .map((player) => player.id)
               : [];
+          const singlePlayerNoShut =
+            scoredPlayers.length === 1 && (scoredPlayers[0].lastScore ?? 0) > 0;
 
-          if (winnerIds.length > 0) {
+          if (winnerIds.length > 0 && !singlePlayerNoShut) {
             set({
               ...baseUpdate,
               phase: 'finished',
               winnerIds,
+              previousWinnerIds: winnerIds,
               turn: {
                 ...turn,
                 rolled: false,
                 finished: true
               },
               pendingTurn: null,
+              pendingTiles: null,
+              waitingForNext: false
+            });
+            persistScores();
+            return;
+          } else if (singlePlayerNoShut) {
+            set({
+              ...baseUpdate,
+              phase: 'finished',
+              winnerIds: [],
+              previousWinnerIds: [],
+              turn: {
+                ...turn,
+                rolled: false,
+                finished: true
+              },
+              pendingTurn: null,
+              pendingTiles: null,
               waitingForNext: false
             });
             persistScores();
@@ -494,9 +545,11 @@ export const useGameStore = create<GameStore>((set, get) => {
               round: state.round + 1
             });
             pendingTurn = buildPendingTurn(0);
+            pendingTiles = resetTiles;
           }
         } else {
           pendingTurn = buildPendingTurn(nextPlayerIndex);
+          pendingTiles = resetTiles;
         }
       } else {
         const shutIds = updatedPlayers
@@ -508,12 +561,14 @@ export const useGameStore = create<GameStore>((set, get) => {
             ...baseUpdate,
             phase: 'finished',
             winnerIds: shutIds,
+            previousWinnerIds: shutIds,
             turn: {
               ...turn,
               rolled: false,
               finished: true
             },
             pendingTurn: null,
+            pendingTiles: null,
             waitingForNext: false
           });
           persistScores();
@@ -524,6 +579,7 @@ export const useGameStore = create<GameStore>((set, get) => {
             Object.assign(baseUpdate, { round: state.round + 1 });
           }
           pendingTurn = buildPendingTurn(nextIndex);
+          pendingTiles = resetTiles;
         }
       }
 
@@ -535,6 +591,7 @@ export const useGameStore = create<GameStore>((set, get) => {
           finished: true
         },
         pendingTurn,
+        pendingTiles,
         waitingForNext: pendingTurn !== null
       });
       persistScores();
@@ -548,6 +605,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         turn: null,
         logs: [],
         winnerIds: [],
+        previousWinnerIds: state.previousWinnerIds,
         bestMove: null,
         round: 1,
         players: state.players.map((player, index) => ({

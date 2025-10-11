@@ -14,7 +14,9 @@ export interface Player {
   name: string;
   totalScore: number;
   lastScore: number | null;
+  hintsEnabled: boolean;
 }
+
 
 export interface TurnHistoryEntry {
   dice: number[];

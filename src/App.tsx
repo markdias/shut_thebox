@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useState, useEffect, useId } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useGameStore } from './store/gameStore';
 import SettingsPanel from './components/SettingsPanel';
@@ -16,14 +16,15 @@ function App() {
   const resetGame = useGameStore((state) => state.resetGame);
   const winnerIds = useGameStore((state) => state.winnerIds);
   const players = useGameStore((state) => state.players);
+  const previousWinnerIds = useGameStore((state) => state.previousWinnerIds);
   const showHints = useGameStore((state) => state.showHints);
   const toggleHints = useGameStore((state) => state.toggleHints);
-  const tilesOpen = useGameStore((state) => state.tilesOpen);
-  const maxTile = useGameStore((state) => state.options.maxTile);
   const unfinishedCounts = useGameStore((state) => state.unfinishedCounts);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const [winnerModalOpen, setWinnerModalOpen] = useState(false);
   const historyVisible = useGameStore((state) => state.historyVisible);
   const toggleHistory = useGameStore((state) => state.toggleHistory);
+  const winnerModalTitleId = useId();
 
   const winners = useMemo(
     () => players.filter((player) => winnerIds.includes(player.id)),
@@ -31,11 +32,29 @@ function App() {
   );
 
   const activePlayer = turn ? players[turn.playerIndex] : null;
-  const closedTiles = Math.max(0, maxTile - tilesOpen.length);
-  const completionPercent =
-    maxTile > 0 ? Math.min(100, Math.round((closedTiles / maxTile) * 100)) : 0;
   const phaseLabel =
     phase === 'setup' ? 'Setup' : phase === 'finished' ? 'Round Complete' : 'In Play';
+  const playerNames =
+    players.length > 0 ? players.map((player) => player.name).join(', ') : '—';
+  const previousWinnerNames = useMemo(() => {
+    if (!previousWinnerIds.length) {
+      return '—';
+    }
+    const nameMap = new Map(players.map((player) => [player.id, player.name]));
+    return previousWinnerIds
+      .map((id) => nameMap.get(id) ?? 'Player')
+      .join(', ');
+  }, [players, previousWinnerIds]);
+
+  const winnersKey = winnerIds.join('|');
+
+  useEffect(() => {
+    if (phase === 'finished' && winners.length > 0) {
+      setWinnerModalOpen(true);
+    } else {
+      setWinnerModalOpen(false);
+    }
+  }, [phase, winners.length, winnersKey]);
 
   const toggleHeaderCollapsed = useCallback(() => {
     setHeaderCollapsed((previous) => !previous);
@@ -56,18 +75,19 @@ function App() {
       return;
     }
 
-      const payload = {
-        exportedAt: new Date().toISOString(),
-        round,
-        phase,
-        players: players.map((player) => ({
-          id: player.id,
-          name: player.name,
-          totalScore: player.totalScore,
-          lastScore: player.lastScore
-        })),
-        unfinishedCounts
-      };
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      round,
+      phase,
+      players: players.map((player) => ({
+        id: player.id,
+        name: player.name,
+        totalScore: player.totalScore,
+        lastScore: player.lastScore
+      })),
+      unfinishedCounts,
+      previousWinnerIds
+    };
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: 'application/json'
@@ -81,7 +101,7 @@ function App() {
     window.setTimeout(() => {
       URL.revokeObjectURL(link.href);
     }, 0);
-  }, [phase, players, round]);
+  }, [phase, players, previousWinnerIds, round, unfinishedCounts]);
 
   return (
     <div className="app-shell">
@@ -99,7 +119,7 @@ function App() {
         <div className="header-toolbar">
           <div className="progress-stack">
             <div
-              className={`game-progress ${headerCollapsed ? 'collapsed' : ''}`}
+              className={`header-toggle ${headerCollapsed ? 'collapsed' : ''}`}
               role="button"
               tabIndex={0}
               aria-pressed={headerCollapsed}
@@ -108,15 +128,7 @@ function App() {
               onClick={toggleHeaderCollapsed}
               onKeyDown={handleProgressKeyDown}
             >
-              <div className="progress-label">
-                <span>Tiles shut</span>
-                <span>
-                  {closedTiles}/{maxTile}
-                </span>
-              </div>
-              <div className="progress-track">
-                <div className="progress-bar" style={{ width: `${completionPercent}%` }} />
-              </div>
+              <span>{headerCollapsed ? 'Show header details' : 'Hide header details'}</span>
             </div>
             <div className="status-block">
               <div className="status-tray">
@@ -133,6 +145,14 @@ function App() {
                   <strong>
                     {phase === 'inProgress' && activePlayer ? activePlayer.name : 'Waiting to start'}
                   </strong>
+                </span>
+                <span className="status-chip players-chip" aria-label="Players in game">
+                  <span className="status-label">Players</span>
+                  <strong>{playerNames}</strong>
+                </span>
+                <span className="status-chip previous-chip" aria-label="Previous winners">
+                  <span className="status-label">Previous winner</span>
+                  <strong>{previousWinnerNames}</strong>
                 </span>
                 <span className={`status-chip hint-${showHints ? 'on' : 'off'}`}>
                   <span className="status-label">Hints</span>
@@ -161,13 +181,36 @@ function App() {
         </div>
       </header>
 
-      {phase === 'finished' && winners.length > 0 && (
-        <div className="winner-banner">
-          <strong>
-            {winners.length === 1
-              ? `${winners[0].name} wins!`
-              : `${winners.map((player) => player.name).join(', ')} tie for the win!`}
-          </strong>
+      {phase === 'finished' && winners.length > 0 && winnerModalOpen && (
+        <div className="winner-modal" role="dialog" aria-modal="true" aria-labelledby={winnerModalTitleId}>
+          <div className="winner-modal-backdrop" aria-hidden="true" />
+          <div className="winner-modal-panel">
+            <header className="winner-modal-header">
+              <span className="winner-modal-kicker">Round complete</span>
+              <h2 className="winner-modal-title" id={winnerModalTitleId}>
+                {winners.length === 1
+                  ? `${winners[0].name} wins!`
+                  : `${winners.map((player) => player.name).join(', ')} tie for the win!`}
+              </h2>
+            </header>
+            <div className="winner-modal-body">
+              <ul className="winner-scores">
+                {players.map((player) => (
+                  <li key={`winner-score-${player.id}`}>
+                    <span className="winner-score-name">{player.name}</span>
+                    <span className="winner-score-value">
+                      {player.lastScore !== null ? player.lastScore : '—'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <footer className="winner-modal-footer">
+              <button type="button" className="primary" onClick={() => setWinnerModalOpen(false)}>
+                OK
+              </button>
+            </footer>
+          </div>
         </div>
       )}
 

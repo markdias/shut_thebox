@@ -47,9 +47,8 @@ function GameBoard() {
   const resetSelection = useGameStore((state) => state.resetSelection);
   const endTurn = useGameStore((state) => state.endTurn);
   const bestMove = useGameStore((state) => state.bestMove);
-  const showHints = useGameStore((state) => state.showHints);
+  const globalHints = useGameStore((state) => state.showHints);
   const startGame = useGameStore((state) => state.startGame);
-  const unfinishedCounts = useGameStore((state) => state.unfinishedCounts);
   const pendingTurn = useGameStore((state) => state.pendingTurn);
   const waitingForNext = useGameStore((state) => state.waitingForNext);
   const acknowledgeNextTurn = useGameStore((state) => state.acknowledgeNextTurn);
@@ -81,17 +80,26 @@ function GameBoard() {
 
   const highlightTiles = new Set<number>();
   const bestTiles = new Set<number>();
-  if (turn?.selectableCombos) {
+  const activePlayerHints = turn ? players[turn.playerIndex]?.hintsEnabled ?? false : false;
+  const hintsActive = globalHints || activePlayerHints;
+  if (hintsActive && turn?.selectableCombos) {
     turn.selectableCombos.forEach((combo) =>
       combo.forEach((value) => highlightTiles.add(value))
     );
   }
-  if (showHints && bestMove) {
+  if (hintsActive && bestMove) {
     bestMove.forEach((value) => bestTiles.add(value));
   }
 
   const startLabel = phase === 'setup' ? 'Start Game' : 'Start New Round';
   const startDisabled = phase === 'inProgress';
+  const canRollOneDieOption = !!turn && turn.canRollOneDie;
+  const oneDieAvailable = canRoll && canRollOneDieOption;
+  const totalTiles = allTiles.length;
+  const tilesClosedCount = totalTiles - tilesRemaining;
+  const progressPercent =
+    totalTiles > 0 ? Math.min(100, Math.round((tilesClosedCount / totalTiles) * 100)) : 0;
+  const showRoundIncomplete = phase === 'finished' && tilesRemaining > 0;
   const activePlayerName =
     phase === 'inProgress' && turn ? players[turn.playerIndex]?.name ?? null : null;
 
@@ -154,6 +162,16 @@ function GameBoard() {
   const indicatorName = waitingForNext && pendingPlayerName ? pendingPlayerName : activePlayerName;
   const indicatorLabel = waitingForNext ? 'Next up' : 'Now playing';
   const indicatorFlash = turnHighlight || waitingForNext;
+  const diceHintText = waitingForNext
+    ? 'Awaiting next player confirmation'
+    : canRoll
+      ? hasActiveDice
+        ? 'Tap to roll again'
+        : 'Tap or press Enter to roll two dice'
+      : 'Waiting for current turn';
+
+  const diceActive = phase === 'inProgress' && !waitingForNext && (!turn || !turn.rolled);
+  const tilesActive = !!turn && turn.rolled && !waitingForNext;
 
   const handleDiceClick = () => {
     if (!canRoll) {
@@ -162,80 +180,132 @@ function GameBoard() {
     rollDice(2);
   };
 
+  const handleRollOneDie = () => {
+    if (!oneDieAvailable) {
+      return;
+    }
+    rollDice(1);
+  };
+
   return (
     <section className="panel board">
       <header className="panel-header">
         <div className="board-header-left">
           <span className="panel-kicker">Roll. React. Shut the box.</span>
           <h2>Board</h2>
-          <p>
-            {phase === 'setup'
-              ? 'Add players and press Start Game to begin.'
-              : 'Roll the dice, select a matching combination, and confirm your move.'}
-          </p>
-        </div>
-        <div className="board-header-right">
-          <button
-            type="button"
-            className="secondary board-start-button"
-            onClick={startGame}
-            disabled={startDisabled}
-          >
-            {startLabel}
-          </button>
+          <div className="start-round-action">
+            <button
+              type="button"
+              className="start-round-button"
+              onClick={startGame}
+              disabled={startDisabled}
+            >
+              {startLabel}
+            </button>
+          </div>
         </div>
       </header>
 
       <div className="panel-body">
-        <div
-          className={classNames('dice-zone', {
-            ready: canRoll,
-            rolling: diceRolling
-          })}
-          role="button"
-          tabIndex={canRoll ? 0 : -1}
-          aria-disabled={!canRoll}
-          aria-label={canRoll ? 'Roll two dice' : 'Dice roll unavailable'}
-          onClick={handleDiceClick}
-          onKeyDown={(event) => {
-            if (!canRoll) return;
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              handleDiceClick();
-            }
-          }}
-        >
-          <span className="dice-label">Current roll</span>
-          <div className={classNames('dice-values', { rolling: diceRolling })}>
-            {diceRender.map((value, index) => (
-              <span
-                key={`die-${index}`}
-                className={classNames('die', value ? `die-face-${value}` : 'die-empty', {
-                  rolling: diceRolling && !!turn?.dice.length
-                })}
-                aria-label={
-                  value ? `Die showing ${value}` : 'Die ready to roll'
-                }
+        <div className="dice-section">
+          <div className="dice-spacer" aria-hidden="true" />
+          <div
+            className={classNames('dice-zone', {
+              ready: canRoll,
+              rolling: diceRolling,
+              active: diceActive
+            })}
+            role="button"
+            tabIndex={canRoll ? 0 : -1}
+            aria-disabled={!canRoll}
+            aria-label={canRoll ? 'Roll two dice' : 'Dice roll unavailable'}
+            onClick={handleDiceClick}
+            onKeyDown={(event) => {
+              if (!canRoll) return;
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleDiceClick();
+              }
+            }}
+          >
+            <span className="dice-label">Current roll</span>
+            <div className={classNames('dice-values', { rolling: diceRolling })}>
+              {diceRender.map((value, index) => (
+                <span
+                  key={`die-${index}`}
+                  className={classNames('die', value ? `die-face-${value}` : 'die-empty', {
+                    rolling: diceRolling && !!turn?.dice.length
+                  })}
+                  aria-label={
+                    value ? `Die showing ${value}` : 'Die ready to roll'
+                  }
+                >
+                  {value
+                    ? [...Array(value)].map((_, pipIndex) => <span key={pipIndex} className="pip" />)
+                    : <span className="die-placeholder">?</span>}
+                  {value ? <span className="die-value">{value}</span> : null}
+                </span>
+              ))}
+              {hasActiveDice ? (
+                <span className="dice-total">= {displayedTotal}</span>
+              ) : (
+                <span className="dice-placeholder">Tap dice to roll</span>
+              )}
+            </div>
+            <div className="dice-actions">
+              <span className="dice-hint">{diceHintText}</span>
+              <button
+                type="button"
+                className={classNames('dice-control', { available: oneDieAvailable })}
+                onClick={handleRollOneDie}
+                disabled={!canRollOneDieOption || !canRoll}
               >
-                {value
-                  ? [...Array(value)].map((_, pipIndex) => <span key={pipIndex} className="pip" />)
-                  : <span className="die-placeholder">?</span>}
-                {value ? <span className="die-value">{value}</span> : null}
-              </span>
-            ))}
-            {hasActiveDice ? (
-              <span className="dice-total">= {displayedTotal}</span>
-            ) : (
-              <span className="dice-placeholder">Tap dice to roll</span>
-            )}
+                Roll one die
+              </button>
+            </div>
           </div>
-          <span className="dice-hint">
-            {canRoll
-              ? hasActiveDice
-                ? 'Tap to roll again'
-                : 'Tap or press Enter to roll two dice'
-              : 'Waiting for current turn'}
-          </span>
+          {hintsActive && (
+            <aside className="combo-sidebar">
+              <div className="combo-header">
+                <h3>Available combinations</h3>
+                <span className="combo-count">{selectableCombos.length}</span>
+              </div>
+              {selectableCombos.length ? (
+                <ul>
+                  {selectableCombos.map((combo, index) => (
+                    <li key={`${combo.join('-')}-${index}`}>
+                      <span className="combo-index">{index + 1}</span>
+                      <span className="combo-values">
+                        {combo.join(' + ')}
+                      </span>
+                      {bestMove &&
+                        combo.length === bestMove.length &&
+                        combo.every((value) => bestMove.includes(value)) && (
+                          <span className="badge">Best</span>
+                        )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">Roll to reveal combos.</p>
+              )}
+            </aside>
+          )}
+        </div>
+
+        <div className="board-progress">
+          <div className="progress-label">
+            <span>Tiles shut</span>
+            <span>
+              {tilesClosedCount}/{totalTiles}
+            </span>
+          </div>
+          <div className="progress-track">
+            <div className="progress-bar" style={{ width: `${progressPercent}%` }} />
+          </div>
+          {showRoundIncomplete && (
+            <div className="board-progress-note">Box not shut this round.</div>
+          )}
         </div>
 
         {waitingForNext && pendingPlayerName && (
@@ -282,7 +352,7 @@ function GameBoard() {
           </div>
           <div
             className={classNames('status-card', {
-              'status-card-accent': showHints && !!bestMove,
+              'status-card-accent': hintsActive && !!bestMove,
               'status-card-alert': turn?.rolled && selectableCombos.length === 0
             })}
           >
@@ -293,22 +363,11 @@ function GameBoard() {
           </div>
         </div>
 
-        <div className="unfinished-panel">
-          <div className="unfinished-header">
-            <h3>Unfinished turns</h3>
-            <span className="unfinished-sub">Tracks turns that ended without a shut box</span>
-          </div>
-          <ul className="unfinished-list">
-            {players.map((player) => (
-              <li key={`unfinished-${player.id}`}>
-                <span className="unfinished-name">{player.name}</span>
-                <span className="unfinished-count">{unfinishedCounts[player.id] ?? 0}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="tiles-grid">
+        <div
+          className={classNames('tiles-grid', {
+            active: tilesActive
+          })}
+        >
           {allTiles.map((tile) => {
             const open = tilesOpen.includes(tile);
             const selected = selectedTiles.includes(tile);
@@ -331,25 +390,15 @@ function GameBoard() {
         )}
 
         <div className="board-controls">
-          <div className="roll-buttons">
-            <button
-              type="button"
-              className="secondary"
-              onClick={() => rollDice(1)}
-              disabled={!canRoll || !turn?.canRollOneDie}
-            >
-              Roll one die
-            </button>
-          </div>
+          <button
+            type="button"
+            className="confirm-prompt"
+            onClick={confirmMove}
+            disabled={!canConfirm || waitingForNext}
+          >
+            Confirm move
+          </button>
           <div className="move-buttons">
-            <button
-              type="button"
-              className="primary"
-              onClick={confirmMove}
-              disabled={!canConfirm || waitingForNext}
-            >
-              Confirm move
-            </button>
             <button
               type="button"
               className="secondary"
@@ -369,31 +418,6 @@ function GameBoard() {
           </div>
         </div>
 
-        {showHints && selectableCombos.length ? (
-          <div className="combo-list">
-            <div className="combo-header">
-              <h3>Available combinations</h3>
-              <span className="combo-count">{selectableCombos.length}</span>
-            </div>
-            <ul>
-              {selectableCombos.map((combo, index) => (
-                <li key={`${combo.join('-')}-${index}`}>
-                  {combo.join(' + ')}
-                  {showHints && bestMove && combo.length === bestMove.length &&
-                    combo.every((value) => bestMove.includes(value)) && <span className="badge">Best</span>}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : showHints ? (
-          <div className="combo-list">
-            <div className="combo-header">
-              <h3>Available combinations</h3>
-              <span className="combo-count muted">0</span>
-            </div>
-            <p className="muted">Roll the dice to see your options.</p>
-          </div>
-        ) : null}
       </div>
     </section>
   );

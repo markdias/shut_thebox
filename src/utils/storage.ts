@@ -3,9 +3,10 @@ import { Player } from '../types';
 const STORAGE_KEY = 'shut-the-box:scores';
 
 export interface StoredScoresSnapshot {
-  players: Array<Pick<Player, 'id' | 'name' | 'totalScore' | 'lastScore'>>;
+  players: Array<Pick<Player, 'id' | 'name' | 'totalScore' | 'lastScore' | 'hintsEnabled'>>;
   round: number;
   unfinishedCounts?: Record<string, number>;
+  previousWinnerIds?: string[];
   updatedAt: number;
 }
 
@@ -37,7 +38,8 @@ export function loadScoresSnapshot(): StoredScoresSnapshot | null {
 export function saveScoresSnapshot(
   players: Player[],
   round: number,
-  unfinishedCounts: Record<string, number>
+  unfinishedCounts: Record<string, number>,
+  previousWinnerIds: string[]
 ): void {
   if (!isBrowser()) {
     return;
@@ -49,10 +51,12 @@ export function saveScoresSnapshot(
         id: player.id,
         name: player.name,
         totalScore: player.totalScore,
-        lastScore: player.lastScore
-      })),
-      round,
-      unfinishedCounts,
+      lastScore: player.lastScore,
+      hintsEnabled: player.hintsEnabled
+    })),
+    round,
+    unfinishedCounts,
+    previousWinnerIds,
       updatedAt: Date.now()
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));

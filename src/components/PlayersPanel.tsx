@@ -6,6 +6,7 @@ function PlayersPanel() {
   const addPlayer = useGameStore((state) => state.addPlayer);
   const removePlayer = useGameStore((state) => state.removePlayer);
   const updatePlayerName = useGameStore((state) => state.updatePlayerName);
+  const togglePlayerHints = useGameStore((state) => state.togglePlayerHints);
   const phase = useGameStore((state) => state.phase);
   const turn = useGameStore((state) => state.turn);
   const options = useGameStore((state) => state.options);
@@ -51,6 +52,13 @@ function PlayersPanel() {
                       : player.lastScore ?? '—'}
                   </span>
                 </div>
+                <button
+                  type="button"
+                  className={`hint-toggle ${player.hintsEnabled ? 'on' : 'off'}`}
+                  onClick={() => togglePlayerHints(player.id)}
+                >
+                  Hints {player.hintsEnabled ? 'On' : 'Off'}
+                </button>
               </li>
             );
           })}
