@@ -449,7 +449,7 @@
 }
 
 .mobile-menu-panel {
-  display: grid;
+  display: none;
   gap: 0.6rem;
   padding: 0.75rem 0.85rem;
   margin-top: 0.65rem;
@@ -457,6 +457,10 @@
   background: rgba(8, 12, 24, 0.95);
   border: 1px solid rgba(59, 130, 246, 0.4);
   box-shadow: 0 16px 36px rgba(2, 6, 23, 0.65);
+}
+
+.mobile-menu-panel.open {
+  display: grid;
 }
 
 .mobile-menu-item {
@@ -509,6 +513,11 @@
 .status-tray.mobile-visible {
   width: 100%;
   margin-top: 0.4rem;
+}
+
+.status-tray.mobile-menu-status {
+  width: 100%;
+  gap: 0.5rem;
 }
 
 button.primary,

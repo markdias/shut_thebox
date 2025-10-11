@@ -283,7 +283,7 @@ function App() {
                   <div
                     id={mobileMenuPanelId}
                     className={`mobile-menu-panel ${mobileMenuOpen ? 'open' : ''}`}
-                    hidden={!mobileMenuOpen}
+                    aria-hidden={!mobileMenuOpen}
                   >
                     <button
                       type="button"
@@ -292,10 +292,10 @@ function App() {
                     >
                       {mobileChipsVisible ? 'Hide status details' : 'Show status details'}
                     </button>
+                    {mobileChipsVisible && renderStatusTray('mobile-visible mobile-menu-status')}
                     <div className="mobile-menu-divider" role="presentation" />
                     {renderHeaderActions('mobile-menu-actions')}
                   </div>
-                  {mobileChipsVisible && renderStatusTray('mobile-visible')}
                 </>
               ) : (
                 <>
