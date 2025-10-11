@@ -146,11 +146,12 @@
 
 .status-tray {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* keep single row on wide screens */
   align-items: stretch;
   justify-content: flex-start;
   gap: 0.68rem;
   flex: 1 1 60px;
+  --chip-width: 200px;
 }
 
 .status-chip {
@@ -166,6 +167,8 @@
   box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(6px);
   min-width: 0;
+  /* Equal base size; allow shrinking to fit */
+  flex: 0 1 var(--chip-width);
 }
 
 .status-chip > span,
@@ -184,9 +187,10 @@
 
 .status-tray {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.45rem;
   width: 100%;
+  --chip-width: 200px;
 }
 
 .status-chip.wide {
@@ -238,7 +242,8 @@
 }
 
 .status-chip.players-chip {
-  flex: 1 1 240px;
+  /* Players grows to take remaining space */
+  flex: 1 1 var(--chip-width);
   max-width: 100%;
 }
 
@@ -250,7 +255,8 @@
 }
 
 .status-chip.previous-chip {
-  flex: 1 1 220px;
+  /* Same base as others; may shrink */
+  flex: 0 1 var(--chip-width);
   max-width: 100%;
 }
 
