@@ -28,3 +28,41 @@ This launches Vite's development server (default port `5173`). Open the printed 
 - `src/styles`: Global and component styling.
 
 Feel free to deploy the production build with any static host after running `npm run build`.
+### Deploying to GitHub Pages
+
+This is a static Vite app. The `dist` folder contains a complete site (index.html + assets). To publish via GitHub Pages:
+
+1) Base path
+
+- If your Pages URL is `https://<user>.github.io/<repo>/` (project pages), set Vite `base` to `'/<repo>/'` in `vite.config.ts`:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  // IMPORTANT for project pages; replace <repo> with your repository name
+  // base: '/<repo>/'
+})
+```
+
+- If you use a custom domain or a user/org site (`https://<user>.github.io/`), you can leave `base` as default ('/').
+
+2) SPA fallback
+
+The build step copies `index.html` to `404.html` so client‑side routes work on Pages.
+
+3) GitHub Actions workflow
+
+The repo includes `.github/workflows/deploy.yml` that:
+- builds the app on pushes to `main`/`master`
+- uploads `dist` as the Pages artifact
+- deploys it to GitHub Pages
+
+Enable GitHub Pages in the repo: Settings → Pages → Build and deployment → Source = GitHub Actions.
+
+4) Environment variables
+
+If you use Contentful (or any env vars), add them as Repository → Settings → Secrets and variables → Actions → Variables, then reference via `VITE_...` when building.
