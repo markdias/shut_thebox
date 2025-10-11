@@ -208,7 +208,29 @@ function GameBoard() {
 
       <div className="panel-body">
         <div className="dice-section">
-          <div className="dice-spacer" aria-hidden="true" />
+          <aside
+            aria-hidden={!(waitingForNext && pendingPlayerName)}
+            className={classNames('turn-sidebar', {
+              visible: waitingForNext && !!pendingPlayerName
+            })}
+          >
+            {waitingForNext && pendingPlayerName ? (
+              <div className="turn-toast" role="alertdialog" aria-live="assertive">
+                <div className="turn-toast-body">
+                  <span className="turn-toast-label">Next player</span>
+                  <span className="turn-toast-name">{pendingPlayerName}</span>
+                  <span className="turn-toast-sub">Ready for their go?</span>
+                  <button
+                    type="button"
+                    className="primary turn-toast-action"
+                    onClick={acknowledgeNextTurn}
+                  >
+                    Start turn
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </aside>
           <div
             className={classNames('dice-zone', {
               ready: canRoll,
@@ -307,23 +329,6 @@ function GameBoard() {
             <div className="board-progress-note">Box not shut this round.</div>
           )}
         </div>
-
-        {waitingForNext && pendingPlayerName && (
-          <div className="turn-toast" role="alertdialog" aria-live="assertive">
-            <div className="turn-toast-body">
-              <span className="turn-toast-label">Next player</span>
-              <span className="turn-toast-name">{pendingPlayerName}</span>
-              <span className="turn-toast-sub">Ready for their go?</span>
-              <button
-                type="button"
-                className="primary turn-toast-action"
-                onClick={acknowledgeNextTurn}
-              >
-                Start turn
-              </button>
-            </div>
-          </div>
-        )}
 
         {indicatorName && (
           <div

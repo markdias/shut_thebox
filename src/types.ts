@@ -1,5 +1,6 @@
 export type OneDieRule = 'after789' | 'totalUnder6' | 'never';
 export type ScoringMode = 'lowest' | 'target' | 'instant';
+export type ThemeName = 'neon' | 'matrix';
 
 export interface GameOptions {
   maxTile: 9 | 10 | 12;
@@ -7,6 +8,7 @@ export interface GameOptions {
   scoring: ScoringMode;
   targetScore: number;
   instantWinOnShut: boolean;
+  theme: ThemeName;
 }
 
 export interface Player {

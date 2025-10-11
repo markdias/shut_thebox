@@ -16,6 +16,18 @@ function SettingsPanel() {
       </header>
       <div className="panel-body form-grid">
         <label className="field">
+          <span className="field-label">Theme</span>
+          <DropdownSelect
+            value={options.theme}
+            options={[
+              { value: 'neon', label: 'Neon glow' },
+              { value: 'matrix', label: 'Matrix grid' }
+            ]}
+            onChange={(nextValue) => setOption('theme', nextValue as GameOptions['theme'])}
+          />
+        </label>
+
+        <label className="field">
           <span className="field-label">Highest tile</span>
           <DropdownSelect
             value={options.maxTile}
