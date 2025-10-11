@@ -180,8 +180,11 @@ function DropdownSelect<T extends PrimitiveOption>({
                 selected: option.value === value,
                 active: index === activeIndex
               })}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                commitSelection(index);
+              }}
               onKeyDown={(event) => handleOptionKeyDown(event, index)}
-              onClick={() => commitSelection(index)}
               onMouseEnter={() => setActiveIndex(index)}
             >
               {option.label}
