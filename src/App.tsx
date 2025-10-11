@@ -285,16 +285,17 @@ function App() {
                     className={`mobile-menu-panel ${mobileMenuOpen ? 'open' : ''}`}
                     aria-hidden={!mobileMenuOpen}
                   >
+                    {renderHeaderActions('mobile-menu-actions')}
+                  </div>
+                  <div className={`mobile-status-panel ${mobileMenuOpen ? 'open' : ''}`}>
                     <button
                       type="button"
-                      className="mobile-menu-item"
+                      className="mobile-status-toggle"
                       onClick={() => setMobileChipsVisible((visible) => !visible)}
                     >
                       {mobileChipsVisible ? 'Hide status details' : 'Show status details'}
                     </button>
-                    {mobileChipsVisible && renderStatusTray('mobile-visible mobile-menu-status')}
-                    <div className="mobile-menu-divider" role="presentation" />
-                    {renderHeaderActions('mobile-menu-actions')}
+                    {mobileChipsVisible && renderStatusTray('mobile-visible mobile-status-tray')}
                   </div>
                 </>
               ) : (
