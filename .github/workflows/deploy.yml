@@ -35,7 +35,10 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
-          VITE_APP_VERSION="${VERSION}+${SHORT_SHA}" npm run build
+          LAST_UPDATED=$(git show -s --format=%cI "${GITHUB_SHA}")
+          VITE_APP_VERSION="${VERSION}+${SHORT_SHA}" \
+          VITE_LAST_UPDATED="${LAST_UPDATED}" \
+          npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

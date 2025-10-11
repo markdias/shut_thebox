@@ -8,7 +8,8 @@ export default defineConfig({
   // Repo: markdias/shut_thebox -> https://markdias.github.io/shut_thebox/
   base: '/shut_thebox/',
   define: {
-    __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION ?? pkg.version)
+    __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION ?? pkg.version),
+    __LAST_UPDATED__: JSON.stringify(process.env.VITE_LAST_UPDATED ?? '')
   },
   server: {
     port: 5173

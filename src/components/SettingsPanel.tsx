@@ -11,6 +11,12 @@ function SettingsPanel() {
   const startGame = useGameStore((state) => state.startGame);
   const [code, setCode] = useState('');
   const appVersion = import.meta.env.VITE_APP_VERSION ?? __APP_VERSION__ ?? 'dev';
+  const rawUpdated = import.meta.env.VITE_LAST_UPDATED ?? (typeof __LAST_UPDATED__ !== 'undefined' ? __LAST_UPDATED__ : undefined);
+  const lastUpdated = (() => {
+    if (!rawUpdated) return null;
+    const d = new Date(String(rawUpdated));
+    return isNaN(d.getTime()) ? null : d.toLocaleString();
+  })();
 
   return (
     <section className="panel">
@@ -34,6 +40,11 @@ function SettingsPanel() {
         <label className="field static-field version-field">
           <span className="field-label">Version</span>
           <span className="version-value">{appVersion}</span>
+        </label>
+
+        <label className="field static-field">
+          <span className="field-label">Last updated</span>
+          <span className="version-value">{lastUpdated ?? '—'}</span>
         </label>
 
         <label className="field">
