@@ -1782,6 +1782,43 @@ button.ghost:disabled {
   color: #e0f2fe;
 }
 
+/* Auto-play banner */
+.autoplay-banner {
+  position: relative;
+  margin: 0.5rem 0 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.8rem;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #bbf7d0;
+}
+
+.autoplay-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+}
+
+.autoplay-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.autoplay-stop {
+  margin-left: auto;
+}
+
+.theme-matrix .autoplay-banner {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.38);
+  color: #bbf7d0;
+}
+
 /* Theme: Matrix */
 .theme-matrix .app-shell {
   background: radial-gradient(circle at 8% -10%, rgba(34, 197, 94, 0.22), transparent 55%),

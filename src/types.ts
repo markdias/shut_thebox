@@ -3,12 +3,15 @@ export type ScoringMode = 'lowest' | 'target' | 'instant';
 export type ThemeName = 'neon' | 'matrix';
 
 export interface GameOptions {
-  maxTile: 9 | 10 | 12;
+  maxTile: number;
   oneDieRule: OneDieRule;
   scoring: ScoringMode;
   targetScore: number;
   instantWinOnShut: boolean;
   theme: ThemeName;
+  cheatFullWin?: boolean;
+  cheatAutoPlay?: boolean;
+  autoRetryOnFail?: boolean;
 }
 
 export interface Player {

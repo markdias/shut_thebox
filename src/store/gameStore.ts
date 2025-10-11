@@ -29,6 +29,7 @@ interface GameStore {
   pendingTurn: TurnState | null;
   pendingTiles: number[] | null;
   waitingForNext: boolean;
+  restartCountdown: number | null;
   setOption: <K extends keyof GameOptions>(key: K, value: GameOptions[K]) => void;
   addPlayer: () => void;
   removePlayer: (id: string) => void;
@@ -66,7 +67,9 @@ const defaultOptions: GameOptions = {
   scoring: 'lowest',
   targetScore: 100,
   instantWinOnShut: true,
-  theme: 'neon'
+  theme: 'neon',
+  cheatFullWin: false,
+  cheatAutoPlay: false
 };
 
 const storedSnapshot = loadScoresSnapshot();
@@ -95,6 +98,7 @@ const initialUnfinishedCounts = initialPlayers.reduce<Record<string, number>>((a
 const initialPreviousWinnerIds = storedSnapshot?.previousWinnerIds ?? [];
 
 export const useGameStore = create<GameStore>((set, get) => {
+  let restartTimer: number | null = null;
   const persistScores = () => {
     const state = get();
     saveScoresSnapshot(
@@ -104,6 +108,26 @@ export const useGameStore = create<GameStore>((set, get) => {
       state.previousWinnerIds,
       state.options.theme
     );
+  };
+
+  const scheduleAutoRestart = (seconds: number) => {
+    if (restartTimer) {
+      window.clearInterval(restartTimer);
+      restartTimer = null;
+    }
+    set({ restartCountdown: seconds });
+    restartTimer = window.setInterval(() => {
+      const s = get();
+      const next = (s.restartCountdown ?? 0) - 1;
+      if (next <= 0) {
+        window.clearInterval(restartTimer!);
+        restartTimer = null;
+        set({ restartCountdown: null });
+        get().startGame();
+      } else {
+        set({ restartCountdown: next });
+      }
+    }, 1000);
   };
 
   return {
@@ -124,6 +148,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     pendingTurn: null,
     pendingTiles: null,
     waitingForNext: false,
+    restartCountdown: null,
     setOption: (key, value) => {
       set((state) => {
         const nextOptions = {
@@ -221,9 +246,23 @@ export const useGameStore = create<GameStore>((set, get) => {
         bestMove: null
       });
       persistScores();
+      // In auto-play, immediately roll to keep going hands-free
+      const st = get();
+      if (st.options.cheatAutoPlay && st.turn && !st.turn.rolled) {
+        window.setTimeout(() => {
+          const s2 = get();
+          if (s2.options.cheatAutoPlay && s2.turn && !s2.turn.rolled) {
+            get().rollDice();
+          }
+        }, 500);
+      }
     },
     clearHistory: () => set({ logs: [] }),
     startGame: () => {
+      if (restartTimer) {
+        window.clearInterval(restartTimer);
+        restartTimer = null;
+      }
       const state = get();
       const { options, players, unfinishedCounts, phase, round } = state;
 
@@ -263,9 +302,19 @@ export const useGameStore = create<GameStore>((set, get) => {
         bestMove: null,
         unfinishedCounts: syncedCounts,
         pendingTurn: null,
-        waitingForNext: false
+        waitingForNext: false,
+        restartCountdown: null
       });
       persistScores();
+
+      if (options.cheatAutoPlay) {
+        window.setTimeout(() => {
+          const latest = get();
+          if (latest.options.cheatAutoPlay && latest.turn && !latest.turn.rolled) {
+            latest.rollDice();
+          }
+        }, 500);
+      }
     },
     rollDice: (diceCount) => {
       const state = get();
@@ -279,20 +328,75 @@ export const useGameStore = create<GameStore>((set, get) => {
         return;
       }
 
-      const diceToRoll = diceCount ?? (canRollOneDie ? 1 : 2);
-      const dice: number[] = [];
-      for (let i = 0; i < diceToRoll; i += 1) {
-        dice.push(Math.floor(Math.random() * 6) + 1);
+      const pickDiceForTotal = (total: number, diceNum: number): number[] => {
+        if (diceNum === 1) return [Math.min(6, Math.max(1, total))];
+        for (let a = 1; a <= 6; a += 1) {
+          const b = total - a;
+          if (b >= 1 && b <= 6) return [a, b];
+        }
+        return [Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1];
+      };
+
+      let diceToRoll = diceCount ?? (canRollOneDie ? 1 : 2);
+      let dice: number[] = [];
+      let combos: number[][] = [];
+      let rollTotal = 0;
+
+      if (options.cheatFullWin) {
+        const candidates: Array<{ total: number; diceNum: number; combos: number[][]; remainder: number }>=[];
+        const tryDiceNums = canRollOneDie ? [1, 2] : [2];
+        for (const dn of tryDiceNums) {
+          const totals = dn === 1 ? [1,2,3,4,5,6] : [2,3,4,5,6,7,8,9,10,11,12];
+          for (const t of totals) {
+            const c = generateTileCombos(tilesOpen, t);
+            if (c.length > 0) {
+              const best = c
+                .map((combo) => ({ combo, remainder: sumTiles(tilesOpen.filter((tile) => !combo.includes(tile))) }))
+                .sort((a, b) => a.remainder - b.remainder)[0];
+              candidates.push({ total: t, diceNum: dn, combos: c, remainder: best?.remainder ?? Number.MAX_SAFE_INTEGER });
+            }
+          }
+        }
+        if (candidates.length > 0) {
+          candidates.sort((a, b) => a.remainder - b.remainder);
+          const chosen = candidates[0];
+          diceToRoll = chosen.diceNum;
+          dice = pickDiceForTotal(chosen.total, diceToRoll);
+          combos = chosen.combos;
+          rollTotal = chosen.total;
+        }
       }
 
-      const total = dice.reduce((sum, value) => sum + value, 0);
-      const combos = generateTileCombos(tilesOpen, total);
-      const bestMoveEntry = combos
-        .map((combo) => ({
-          combo,
-          remainder: sumTiles(tilesOpen.filter((tile) => !combo.includes(tile)))
-        }))
-        .sort((a, b) => a.remainder - b.remainder)[0];
+      if (dice.length === 0) {
+        diceToRoll = diceCount ?? (canRollOneDie ? 1 : 2);
+        dice = [];
+        for (let i = 0; i < diceToRoll; i += 1) {
+          dice.push(Math.floor(Math.random() * 6) + 1);
+        }
+        rollTotal = dice.reduce((sum, value) => sum + value, 0);
+        combos = generateTileCombos(tilesOpen, rollTotal);
+      }
+      const combosRated = combos.map((combo) => {
+        const remainder = sumTiles(tilesOpen.filter((tile) => !combo.includes(tile)));
+        const maxTile = Math.max(...combo);
+        const sum = combo.reduce((acc, n) => acc + n, 0);
+        const length = combo.length;
+        return { combo, remainder, maxTile, sum, length };
+      });
+
+      const bestMoveEntry = combosRated
+        .sort((a, b) => {
+          if (b.maxTile !== a.maxTile) {
+            return b.maxTile - a.maxTile;
+          }
+          if (b.sum !== a.sum) {
+            return b.sum - a.sum;
+          }
+          if (a.length !== b.length) {
+            return a.length - b.length; // prefer fewer tiles when equal
+          }
+          return a.remainder - b.remainder;
+        })[0];
       const bestMove = bestMoveEntry ? bestMoveEntry.combo : null;
 
       set({
@@ -311,6 +415,31 @@ export const useGameStore = create<GameStore>((set, get) => {
 
       if (combos.length === 0) {
         get().endTurn();
+        return;
+      }
+      // Auto-play tick after a successful roll (visible, step-by-step)
+      const stAfter = get();
+      if (stAfter.options.cheatAutoPlay) {
+        const bm = stAfter.bestMove;
+        if (bm && stAfter.turn && stAfter.turn.rolled) {
+          // Small delay to simulate thinking, then select best move
+          window.setTimeout(() => {
+            const s1 = get();
+            if (!s1.turn || s1.turn.finished || !s1.turn.rolled) return;
+            set({
+              turn: {
+                ...s1.turn,
+                selectedTiles: bm
+              }
+            });
+            // Another delay to simulate clicking confirm
+            window.setTimeout(() => {
+              const s2 = get();
+              if (!s2.turn || s2.turn.finished || !s2.turn.rolled) return;
+              get().confirmMove();
+            }, 600);
+          }, 600);
+        }
       }
     },
     selectTile: (tile) => {
@@ -422,7 +551,11 @@ export const useGameStore = create<GameStore>((set, get) => {
                 message: endMessage,
                 timestamp: Date.now()
               }
-            ]
+            ],
+            unfinishedCounts: {
+              ...stateAfter.unfinishedCounts,
+              [stateAfter.players[playerIndex].id]: 0
+            }
           };
         });
 
@@ -435,9 +568,34 @@ export const useGameStore = create<GameStore>((set, get) => {
               : stateAfter.turn
           }));
           persistScores();
+          const aft = get();
+          if (aft.options.cheatAutoPlay) {
+            set({
+              options: {
+                ...aft.options,
+                cheatAutoPlay: false,
+                autoRetryOnFail: false
+              },
+              restartCountdown: null
+            });
+            persistScores();
+          }
+          if (aft.options.autoRetryOnFail) {
+            scheduleAutoRestart(3);
+          }
         } else {
           get().endTurn();
         }
+      }
+      // If auto-play is enabled and the turn continues, roll again after a short delay
+      const s2 = get();
+      if (s2.options.cheatAutoPlay && s2.turn && !s2.turn.finished && !s2.turn.rolled) {
+        window.setTimeout(() => {
+          const s3 = get();
+          if (s3.turn && !s3.turn.finished && !s3.turn.rolled) {
+            get().rollDice();
+          }
+        }, 700);
       }
     },
     endTurn: () => {
@@ -533,25 +691,44 @@ export const useGameStore = create<GameStore>((set, get) => {
               waitingForNext: false
             });
             persistScores();
+            const aft = get();
+            if (aft.options.cheatAutoPlay) {
+              set({
+                options: {
+                  ...aft.options,
+                  cheatAutoPlay: false,
+                  autoRetryOnFail: false
+                },
+                restartCountdown: null
+              });
+              persistScores();
+            }
+            if (aft.options.autoRetryOnFail) {
+              scheduleAutoRestart(3);
+            }
             return;
-          } else if (singlePlayerNoShut) {
-            set({
-              ...baseUpdate,
-              phase: 'finished',
-              winnerIds: [],
-              previousWinnerIds: [],
-              turn: {
-                ...turn,
-                rolled: false,
-                finished: true
-              },
-              pendingTurn: null,
-              pendingTiles: null,
-              waitingForNext: false
-            });
-            persistScores();
-            return;
-          } else {
+        } else if (singlePlayerNoShut) {
+          set({
+            ...baseUpdate,
+            phase: 'finished',
+            winnerIds: [],
+            previousWinnerIds: [],
+            turn: {
+              ...turn,
+              rolled: false,
+              finished: true
+            },
+            pendingTurn: null,
+            pendingTiles: null,
+            waitingForNext: false
+          });
+          persistScores();
+          const aft = get();
+          if (aft.options.cheatAutoPlay || aft.options.autoRetryOnFail) {
+            scheduleAutoRestart(3);
+          }
+          return;
+        } else {
             Object.assign(baseUpdate, {
               round: state.round + 1
             });
@@ -583,6 +760,21 @@ export const useGameStore = create<GameStore>((set, get) => {
             waitingForNext: false
           });
           persistScores();
+          const aft2 = get();
+          if (aft2.options.cheatAutoPlay) {
+            set({
+              options: {
+                ...aft2.options,
+                cheatAutoPlay: false,
+                autoRetryOnFail: false
+              },
+              restartCountdown: null
+            });
+            persistScores();
+          }
+          if (aft2.options.autoRetryOnFail) {
+            scheduleAutoRestart(3);
+          }
           return;
         } else {
           const nextIndex = isLastPlayer ? 0 : nextPlayerIndex;
@@ -606,7 +798,27 @@ export const useGameStore = create<GameStore>((set, get) => {
         waitingForNext: pendingTurn !== null
       });
       persistScores();
-  },
+
+      // If auto-play/retry is enabled and the round just finished without a winner (solo fail),
+      // schedule a restart with a visible countdown.
+      const after = get();
+      if (
+        (after.options.cheatAutoPlay || after.options.autoRetryOnFail) &&
+        after.phase === 'finished' &&
+        Array.isArray(after.winnerIds) &&
+        after.winnerIds.length === 0
+      ) {
+        scheduleAutoRestart(3);
+      } else if (after.options.cheatAutoPlay && after.waitingForNext) {
+        // Auto-ack the next turn prompt
+        window.setTimeout(() => {
+          const again = get();
+          if (again.options.cheatAutoPlay && again.waitingForNext) {
+            again.acknowledgeNextTurn();
+          }
+        }, 600);
+      }
+    },
     resetGame: () => {
       const { options } = get();
       const initialTiles = createInitialTiles(options.maxTile);

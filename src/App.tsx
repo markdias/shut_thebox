@@ -26,6 +26,9 @@ function App() {
   const toggleHistory = useGameStore((state) => state.toggleHistory);
   const winnerModalTitleId = useId();
   const theme = useGameStore((state) => state.options.theme);
+  const cheatAutoPlay = useGameStore((state) => Boolean(state.options.cheatAutoPlay));
+  const restartCountdown = useGameStore((state) => state.restartCountdown);
+  const setOption = useGameStore((state) => state.setOption);
 
   const winners = useMemo(
     () => players.filter((player) => winnerIds.includes(player.id)),
@@ -201,6 +204,25 @@ function App() {
           </div>
         </div>
       </header>
+
+      {cheatAutoPlay && (
+        <div className="autoplay-banner" role="status" aria-live="polite">
+          <span className="autoplay-dot" aria-hidden="true" />
+          <span className="autoplay-text">
+            Auto-play active{typeof restartCountdown === 'number' ? ` — next game in ${restartCountdown}s` : ''}
+          </span>
+          <button
+            type="button"
+            className="ghost autoplay-stop"
+            onClick={() => {
+              setOption('cheatAutoPlay' as any, false as any);
+              setOption('autoRetryOnFail' as any, false as any);
+            }}
+          >
+            Stop
+          </button>
+        </div>
+      )}
 
       {phase === 'finished' && winners.length > 0 && winnerModalOpen && (
         <div className="winner-modal" role="dialog" aria-modal="true" aria-labelledby={winnerModalTitleId}>

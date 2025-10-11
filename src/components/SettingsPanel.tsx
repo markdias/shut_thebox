@@ -1,4 +1,5 @@
 import { useGameStore } from '../store/gameStore';
+import { useState } from 'react';
 import { GameOptions } from '../types';
 import DropdownSelect from './ui/DropdownSelect';
 
@@ -7,6 +8,8 @@ const tileOptions: GameOptions['maxTile'][] = [9, 10, 12];
 function SettingsPanel() {
   const options = useGameStore((state) => state.options);
   const setOption = useGameStore((state) => state.setOption);
+  const startGame = useGameStore((state) => state.startGame);
+  const [code, setCode] = useState('');
 
   return (
     <section className="panel">
@@ -15,6 +18,43 @@ function SettingsPanel() {
         <p>Choose your variant and launch a new round at any time.</p>
       </header>
       <div className="panel-body form-grid">
+        <label className="field">
+          <span className="field-label">Code</span>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Enter a code"
+            />
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => {
+                const value = code.trim().toLowerCase();
+                if (value === 'full') {
+                  setOption('cheatFullWin', true);
+                } else if (value === 'madness') {
+                  setOption('maxTile', 56);
+                } else if (value === 'takeover') {
+                  // Visible auto-play: do NOT force winnable rolls
+                  setOption('cheatAutoPlay', true);
+                  setOption('cheatFullWin', false);
+                  setOption('autoRetryOnFail', true);
+                  // Immediately start (or restart) a game so it runs hands-free
+                  startGame();
+                } else {
+                  setOption('cheatFullWin', false);
+                  setOption('cheatAutoPlay', false);
+                  setOption('autoRetryOnFail', false);
+                }
+              }}
+            >
+              Apply
+            </button>
+          </div>
+          <small className="muted">Enter special codes to modify gameplay.</small>
+        </label>
         <label className="field">
           <span className="field-label">Theme</span>
           <DropdownSelect
@@ -76,9 +116,9 @@ function SettingsPanel() {
               type="number"
               min={10}
               value={options.targetScore}
-              onChange={(event) => setOption('targetScore', Number(event.target.value))}
-            />
-          </label>
+            onChange={(event) => setOption('targetScore', Number(event.target.value))}
+          />
+        </label>
         )}
 
         <label className="field checkbox">
@@ -89,6 +129,14 @@ function SettingsPanel() {
             disabled={options.scoring === 'instant'}
           />
           <span className="checkbox-label">Instant win when all tiles are shut</span>
+        </label>
+        <label className="field checkbox">
+          <input
+            type="checkbox"
+            checked={Boolean(options.autoRetryOnFail)}
+            onChange={(e) => setOption('autoRetryOnFail', e.target.checked)}
+          />
+          <span className="checkbox-label">Auto-retry on failure</span>
         </label>
       </div>
     </section>
