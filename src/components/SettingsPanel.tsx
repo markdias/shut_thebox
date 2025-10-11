@@ -10,6 +10,7 @@ function SettingsPanel() {
   const setOption = useGameStore((state) => state.setOption);
   const startGame = useGameStore((state) => state.startGame);
   const [code, setCode] = useState('');
+  const appVersion = import.meta.env.VITE_APP_VERSION ?? __APP_VERSION__ ?? 'dev';
 
   return (
     <section className="panel">
@@ -18,43 +19,7 @@ function SettingsPanel() {
         <p>Choose your variant and launch a new round at any time.</p>
       </header>
       <div className="panel-body form-grid">
-        <label className="field">
-          <span className="field-label">Code</span>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter a code"
-            />
-            <button
-              type="button"
-              className="secondary"
-              onClick={() => {
-                const value = code.trim().toLowerCase();
-                if (value === 'full') {
-                  setOption('cheatFullWin', true);
-                } else if (value === 'madness') {
-                  setOption('maxTile', 56);
-                } else if (value === 'takeover') {
-                  // Visible auto-play: do NOT force winnable rolls
-                  setOption('cheatAutoPlay', true);
-                  setOption('cheatFullWin', false);
-                  setOption('autoRetryOnFail', true);
-                  // Immediately start (or restart) a game so it runs hands-free
-                  startGame();
-                } else {
-                  setOption('cheatFullWin', false);
-                  setOption('cheatAutoPlay', false);
-                  setOption('autoRetryOnFail', false);
-                }
-              }}
-            >
-              Apply
-            </button>
-          </div>
-          <small className="muted">Enter special codes to modify gameplay.</small>
-        </label>
+        {/* Code tools moved to bottom and toggleable */}
         <label className="field">
           <span className="field-label">Theme</span>
           <DropdownSelect
@@ -65,6 +30,10 @@ function SettingsPanel() {
             ]}
             onChange={(nextValue) => setOption('theme', nextValue as GameOptions['theme'])}
           />
+        </label>
+        <label className="field static-field version-field">
+          <span className="field-label">Version</span>
+          <span className="version-value">{appVersion}</span>
         </label>
 
         <label className="field">
@@ -124,6 +93,15 @@ function SettingsPanel() {
         <label className="field checkbox">
           <input
             type="checkbox"
+            checked={Boolean(options.showHeaderDetails)}
+            onChange={(e) => setOption('showHeaderDetails', e.target.checked)}
+          />
+          <span className="checkbox-label">Show header details</span>
+        </label>
+
+        <label className="field checkbox">
+          <input
+            type="checkbox"
             checked={options.instantWinOnShut}
             onChange={(event) => setOption('instantWinOnShut', event.target.checked)}
             disabled={options.scoring === 'instant'}
@@ -138,6 +116,55 @@ function SettingsPanel() {
           />
           <span className="checkbox-label">Auto-retry on failure</span>
         </label>
+
+        <label className="field checkbox">
+          <input
+            type="checkbox"
+            checked={Boolean(options.showCodeTools)}
+            onChange={(e) => setOption('showCodeTools', e.target.checked)}
+          />
+          <span className="checkbox-label">Show code tools</span>
+        </label>
+
+        {Boolean(options.showCodeTools) && (
+          <label className="field">
+            <span className="field-label">Code</span>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Enter a code"
+              />
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => {
+                  const value = code.trim().toLowerCase();
+                  if (value === 'full') {
+                    setOption('cheatFullWin', true);
+                  } else if (value === 'madness') {
+                    setOption('maxTile', 56);
+                  } else if (value === 'takeover') {
+                    // Visible auto-play: do NOT force winnable rolls
+                    setOption('cheatAutoPlay', true);
+                    setOption('cheatFullWin', false);
+                    setOption('autoRetryOnFail', true);
+                    // Immediately start (or restart) a game so it runs hands-free
+                    startGame();
+                  } else {
+                    setOption('cheatFullWin', false);
+                    setOption('cheatAutoPlay', false);
+                    setOption('autoRetryOnFail', false);
+                  }
+                }}
+              >
+                Apply
+              </button>
+            </div>
+            <small className="muted">Enter special codes to modify gameplay.</small>
+          </label>
+        )}
       </div>
     </section>
   );

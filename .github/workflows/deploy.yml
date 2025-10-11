@@ -31,7 +31,11 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          VITE_APP_VERSION="${VERSION}+${SHORT_SHA}" npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -48,4 +52,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-

@@ -12,6 +12,8 @@ export interface GameOptions {
   cheatFullWin?: boolean;
   cheatAutoPlay?: boolean;
   autoRetryOnFail?: boolean;
+  showHeaderDetails?: boolean;
+  showCodeTools?: boolean;
 }
 
 export interface Player {

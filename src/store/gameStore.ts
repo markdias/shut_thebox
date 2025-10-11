@@ -69,7 +69,9 @@ const defaultOptions: GameOptions = {
   instantWinOnShut: true,
   theme: 'neon',
   cheatFullWin: false,
-  cheatAutoPlay: false
+  cheatAutoPlay: false,
+  showHeaderDetails: false,
+  showCodeTools: false
 };
 
 const storedSnapshot = loadScoresSnapshot();
