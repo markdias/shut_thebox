@@ -2077,3 +2077,87 @@ button.ghost:disabled {
     font-size: 1.6rem;
   }
 }
+
+@media (max-width: 540px) {
+  .app-shell {
+    padding: 1.15rem 0.85rem 1.6rem;
+    gap: 0.9rem;
+  }
+
+  .panel {
+    border-radius: 0.9rem;
+  }
+
+  .panel-header {
+    padding: 1rem 1.1rem 0.65rem;
+  }
+
+  .panel-body {
+    padding: 1rem 1.1rem 1.1rem;
+  }
+
+  .autoplay-banner {
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .autoplay-stop {
+    margin-left: 0;
+  }
+
+  .dice-section {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+    justify-items: center;
+  }
+
+  .turn-sidebar,
+  .combo-sidebar {
+    width: min(280px, 100%);
+    justify-self: center;
+  }
+
+  .dice-zone {
+    width: min(300px, 100%);
+    padding: 1.4rem 1.3rem;
+  }
+
+  .dice-values {
+    gap: 1.2rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .die {
+    width: 6.4rem;
+    height: 6.4rem;
+    padding: 1.3rem;
+    gap: 0.5rem;
+  }
+
+  .board .panel-body {
+    gap: 0.75rem;
+  }
+
+  .tiles-grid {
+    grid-template-columns: repeat(auto-fit, minmax(46px, 1fr));
+    gap: 0.45rem;
+  }
+
+  .tile {
+    font-size: 1.45rem;
+    border-radius: 0.7rem;
+  }
+
+  .combo-sidebar .combo-header h3 {
+    font-size: 0.82rem;
+  }
+
+  .combo-sidebar li {
+    padding: 0.4rem 0.65rem;
+  }
+
+  .winner-modal-panel {
+    width: min(420px, 92vw);
+    padding: 1.4rem 1.1rem 1.1rem;
+  }
+}
