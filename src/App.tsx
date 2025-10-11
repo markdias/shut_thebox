@@ -24,6 +24,7 @@ function App() {
   const [winnerModalOpen, setWinnerModalOpen] = useState(false);
   const historyVisible = useGameStore((state) => state.historyVisible);
   const toggleHistory = useGameStore((state) => state.toggleHistory);
+  const mobileMenuPanelId = useId();
   const winnerModalTitleId = useId();
   const theme = useGameStore((state) => state.options.theme);
   const cheatAutoPlay = useGameStore((state) => Boolean(state.options.cheatAutoPlay));
@@ -32,6 +33,13 @@ function App() {
   const endTurn = useGameStore((state) => state.endTurn);
   const waitingForNext = useGameStore((state) => state.waitingForNext);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const initialIsMobileViewport =
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(max-width: 720px)').matches
+      : false;
+  const [isMobileViewport, setIsMobileViewport] = useState(initialIsMobileViewport);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileChipsVisible, setMobileChipsVisible] = useState(!initialIsMobileViewport);
 
   const winners = useMemo(
     () => players.filter((player) => winnerIds.includes(player.id)),
@@ -81,6 +89,123 @@ function App() {
       bodyEl.classList.remove(themeClass);
     };
   }, [theme]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
+    }
+
+    const query = window.matchMedia('(max-width: 720px)');
+    const applyMatches = (matches: boolean) => {
+      setIsMobileViewport(matches);
+      setMobileChipsVisible(matches ? false : true);
+      setMobileMenuOpen(false);
+    };
+
+    applyMatches(query.matches);
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      applyMatches(event.matches);
+    };
+
+    if (typeof query.addEventListener === 'function') {
+      query.addEventListener('change', handleChange);
+      return () => {
+        query.removeEventListener('change', handleChange);
+      };
+    }
+
+    query.addListener(handleChange);
+    return () => {
+      query.removeListener(handleChange);
+    };
+  }, []);
+
+  const createMenuActionHandler = useCallback(
+    (action: () => void) => () => {
+      action();
+      if (isMobileViewport) {
+        setMobileMenuOpen(false);
+      }
+    },
+    [isMobileViewport]
+  );
+
+  const renderStatusTray = (extraClass?: string) => {
+    const trayClass = ['status-tray', extraClass].filter(Boolean).join(' ');
+    return (
+      <div className={trayClass}>
+        <span className="status-chip">
+          <span className="status-label">Round</span>
+          <strong>{round}</strong>
+        </span>
+        <span className={`status-chip phase-${phase}`}>
+          <span className="status-label">Phase</span>
+          <strong>{phaseLabel}</strong>
+        </span>
+        <span className="status-chip wide">
+          <span className="status-label">Active player</span>
+          <strong>{phase === 'inProgress' && activePlayer ? activePlayer.name : 'Waiting to start'}</strong>
+        </span>
+        <span className="status-chip players-chip" aria-label="Players in game">
+          <span className="status-label">Players</span>
+          <strong>{playerNames}</strong>
+        </span>
+        <span className="status-chip previous-chip" aria-label="Previous winners">
+          <span className="status-label">Previous winner</span>
+          <strong>{previousWinnerNames}</strong>
+        </span>
+        <span className={`status-chip hint-${showHints ? 'on' : 'off'}`}>
+          <span className="status-label">Hints</span>
+          <strong>{showHints ? 'On' : 'Off'}</strong>
+        </span>
+      </div>
+    );
+  };
+
+  const renderHeaderActions = (extraClass?: string) => {
+    const actionsClass = ['header-actions', extraClass].filter(Boolean).join(' ');
+    return (
+      <div className={actionsClass}>
+        <button
+          className="secondary"
+          onClick={createMenuActionHandler(() => toggleSettings(!settingsOpen))}
+        >
+          {settingsOpen ? 'Hide Settings' : 'Show Settings'}
+        </button>
+        <button className="secondary" onClick={createMenuActionHandler(() => toggleHistory(!historyVisible))}>
+          {historyVisible ? 'Hide History' : 'Show History'}
+        </button>
+        <button className="secondary" onClick={createMenuActionHandler(toggleHints)}>
+          {showHints ? 'Hide Hints' : 'Show Hints'}
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          onClick={createMenuActionHandler(handleSaveScores)}
+        >
+          Save scores
+        </button>
+        <button className="ghost" onClick={createMenuActionHandler(resetGame)}>
+          Reset
+        </button>
+        <button
+          className="ghost"
+          onClick={createMenuActionHandler(endTurn)}
+          disabled={phase !== 'inProgress' || waitingForNext}
+        >
+          End turn
+        </button>
+        <button
+          className="ghost"
+          type="button"
+          onClick={createMenuActionHandler(() => setInstructionsOpen(true))}
+        >
+          How to Play
+        </button>
+      </div>
+    );
+  };
 
   // Header visibility is controlled via settings (options.showHeaderDetails)
 
@@ -134,65 +259,50 @@ function App() {
           <div className="progress-stack">
             {/* Header details toggle moved to Settings panel */}
             <div className="status-block">
-              <div className="status-tray">
-                <span className="status-chip">
-                  <span className="status-label">Round</span>
-                  <strong>{round}</strong>
-                </span>
-                <span className={`status-chip phase-${phase}`}>
-                  <span className="status-label">Phase</span>
-                  <strong>{phaseLabel}</strong>
-                </span>
-                <span className="status-chip wide">
-                  <span className="status-label">Active player</span>
-                  <strong>
-                    {phase === 'inProgress' && activePlayer ? activePlayer.name : 'Waiting to start'}
-                  </strong>
-                </span>
-                <span className="status-chip players-chip" aria-label="Players in game">
-                  <span className="status-label">Players</span>
-                  <strong>{playerNames}</strong>
-                </span>
-                <span className="status-chip previous-chip" aria-label="Previous winners">
-                  <span className="status-label">Previous winner</span>
-                  <strong>{previousWinnerNames}</strong>
-                </span>
-                <span className={`status-chip hint-${showHints ? 'on' : 'off'}`}>
-                  <span className="status-label">Hints</span>
-                  <strong>{showHints ? 'On' : 'Off'}</strong>
-                </span>
-              </div>
-              <div className="header-actions">
-                <button className="secondary" onClick={() => toggleSettings(!settingsOpen)}>
-                  {settingsOpen ? 'Hide Settings' : 'Show Settings'}
-                </button>
-                <button className="secondary" onClick={() => toggleHistory(!historyVisible)}>
-                  {historyVisible ? 'Hide History' : 'Show History'}
-                </button>
-                <button className="secondary" onClick={toggleHints}>
-                  {showHints ? 'Hide Hints' : 'Show Hints'}
-                </button>
-                <button type="button" className="ghost" onClick={handleSaveScores}>
-                  Save scores
-                </button>
-                <button className="ghost" onClick={resetGame}>
-                  Reset
-                </button>
-                <button
-                  className="ghost"
-                  onClick={endTurn}
-                  disabled={phase !== 'inProgress' || waitingForNext}
-                >
-                  End turn
-                </button>
-                <button
-                  className="ghost"
-                  type="button"
-                  onClick={() => setInstructionsOpen(true)}
-                >
-                  How to Play
-                </button>
-              </div>
+              {isMobileViewport ? (
+                <>
+                  <div className="mobile-header-toggle">
+                    <button
+                      type="button"
+                      className={`mobile-menu-button ${mobileMenuOpen ? 'open' : ''}`}
+                      aria-expanded={mobileMenuOpen}
+                      aria-controls={mobileMenuPanelId}
+                      onClick={() => setMobileMenuOpen((open) => !open)}
+                    >
+                      <span className="sr-only">
+                        {mobileMenuOpen ? 'Close header menu' : 'Open header menu'}
+                      </span>
+                      <span aria-hidden="true" className="mobile-menu-icon">
+                        <span className="mobile-menu-bar" />
+                        <span className="mobile-menu-bar" />
+                        <span className="mobile-menu-bar" />
+                      </span>
+                      <span className="mobile-menu-label">Menu</span>
+                    </button>
+                  </div>
+                  <div
+                    id={mobileMenuPanelId}
+                    className={`mobile-menu-panel ${mobileMenuOpen ? 'open' : ''}`}
+                    hidden={!mobileMenuOpen}
+                  >
+                    <button
+                      type="button"
+                      className="mobile-menu-item"
+                      onClick={() => setMobileChipsVisible((visible) => !visible)}
+                    >
+                      {mobileChipsVisible ? 'Hide status details' : 'Show status details'}
+                    </button>
+                    <div className="mobile-menu-divider" role="presentation" />
+                    {renderHeaderActions('mobile-menu-actions')}
+                  </div>
+                  {mobileChipsVisible && renderStatusTray('mobile-visible')}
+                </>
+              ) : (
+                <>
+                  {renderStatusTray()}
+                  {renderHeaderActions()}
+                </>
+              )}
             </div>
           </div>
         </div>
