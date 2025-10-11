@@ -2120,7 +2120,8 @@ button.ghost:disabled {
 
   .status-tray {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 0.45rem;
   }
 
   .status-block {
@@ -2194,13 +2195,28 @@ button.ghost:disabled {
   }
 
   .status-chip {
-    width: auto;
-    align-items: flex-start;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     text-align: left;
+    padding: 0.65rem 1rem; /* match button vertical rhythm */
+    border-radius: 999px;
   }
 
+  .status-chip > span,
   .status-chip strong {
     width: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Keep uniform height on mobile even for Players chip */
+  .status-chip.players-chip strong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .header-actions {
