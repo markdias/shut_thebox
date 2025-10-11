@@ -1,19 +1,12 @@
-import { FormEvent } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { GameOptions } from '../types';
+import DropdownSelect from './ui/DropdownSelect';
 
 const tileOptions: GameOptions['maxTile'][] = [9, 10, 12];
 
 function SettingsPanel() {
   const options = useGameStore((state) => state.options);
   const setOption = useGameStore((state) => state.setOption);
-  const phase = useGameStore((state) => state.phase);
-  const startGame = useGameStore((state) => state.startGame);
-
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    startGame();
-  };
 
   return (
     <section className="panel">
@@ -21,54 +14,52 @@ function SettingsPanel() {
         <h2>Settings</h2>
         <p>Choose your variant and launch a new round at any time.</p>
       </header>
-      <form className="panel-body form-grid" onSubmit={handleSubmit}>
+      <div className="panel-body form-grid">
         <label className="field">
-          <span>Highest tile</span>
-          <select
+          <span className="field-label">Highest tile</span>
+          <DropdownSelect
             value={options.maxTile}
-            onChange={(event) =>
-              setOption('maxTile', Number(event.target.value) as GameOptions['maxTile'])
+            options={tileOptions.map((value) => ({
+              value,
+              label: `1 – ${value}`
+            }))}
+            onChange={(nextValue) =>
+              setOption('maxTile', Number(nextValue) as GameOptions['maxTile'])
             }
-          >
-            {tileOptions.map((value) => (
-              <option key={value} value={value}>
-                1 – {value}
-              </option>
-            ))}
-          </select>
+          />
         </label>
 
         <label className="field">
-          <span>One die rule</span>
-          <select
+          <span className="field-label">One die rule</span>
+          <DropdownSelect
             value={options.oneDieRule}
-            onChange={(event) =>
-              setOption('oneDieRule', event.target.value as GameOptions['oneDieRule'])
+            options={[
+              { value: 'after789', label: 'Allowed after top tiles shut' },
+              { value: 'totalUnder6', label: 'Allowed when remainder < 6' },
+              { value: 'never', label: 'Never' }
+            ]}
+            onChange={(nextValue) =>
+              setOption('oneDieRule', nextValue as GameOptions['oneDieRule'])
             }
-          >
-            <option value="after789">Allowed after top tiles shut</option>
-            <option value="totalUnder6">Allowed when remainder &lt; 6</option>
-            <option value="never">Never</option>
-          </select>
+          />
         </label>
 
         <label className="field">
-          <span>Scoring</span>
-          <select
+          <span className="field-label">Scoring</span>
+          <DropdownSelect
             value={options.scoring}
-            onChange={(event) =>
-              setOption('scoring', event.target.value as GameOptions['scoring'])
-            }
-          >
-            <option value="lowest">Lowest single-round remainder</option>
-            <option value="target">Cumulative to target</option>
-            <option value="instant">Instant win on shut</option>
-          </select>
+            options={[
+              { value: 'lowest', label: 'Lowest single-round remainder' },
+              { value: 'target', label: 'Cumulative to target' },
+              { value: 'instant', label: 'Instant win on shut' }
+            ]}
+            onChange={(nextValue) => setOption('scoring', nextValue as GameOptions['scoring'])}
+          />
         </label>
 
         {options.scoring === 'target' && (
           <label className="field">
-            <span>Target score</span>
+            <span className="field-label">Target score</span>
             <input
               type="number"
               min={10}
@@ -85,13 +76,9 @@ function SettingsPanel() {
             onChange={(event) => setOption('instantWinOnShut', event.target.checked)}
             disabled={options.scoring === 'instant'}
           />
-          <span>Instant win when all tiles are shut</span>
+          <span className="checkbox-label">Instant win when all tiles are shut</span>
         </label>
-
-        <button type="submit" className="primary" disabled={phase === 'inProgress'}>
-          {phase === 'setup' ? 'Start Game' : 'Start New Round'}
-        </button>
-      </form>
+      </div>
     </section>
   );
 }

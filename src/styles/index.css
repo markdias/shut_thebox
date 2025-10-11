@@ -21,3 +21,11 @@ a {
 button {
   font-family: inherit;
 }
+
+select {
+  font-family: inherit;
+}
+
+select option {
+  font-family: inherit;
+}

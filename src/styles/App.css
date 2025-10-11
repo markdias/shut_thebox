@@ -476,27 +476,13 @@ button.ghost:disabled {
   gap: 1rem;
 }
 
-.turn-indicator {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.85rem;
-  padding: 0.65rem 0.95rem;
-  border-radius: 0.9rem;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(21, 31, 56, 0.85));
-  border: 1px solid rgba(96, 165, 250, 0.45);
-  box-shadow: 0 16px 28px rgba(30, 64, 175, 0.28);
-  transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
-}
-
 .turn-toast {
   width: 100%;
   position: relative;
   margin-bottom: 0.85rem;
   display: flex;
   justify-content: center;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .turn-toast-body {
@@ -511,6 +497,7 @@ button.ghost:disabled {
   animation: toastPop 0.8s ease forwards;
   text-align: center;
   min-width: min(420px, 100%);
+  pointer-events: auto;
 }
 
 .turn-toast-label {
@@ -531,6 +518,14 @@ button.ghost:disabled {
   color: rgba(220, 252, 231, 0.85);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.turn-toast-action {
+  margin-top: 0.4rem;
+  align-self: center;
+  padding-inline: 1.6rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
 }
 
 .turn-indicator {
@@ -866,6 +861,12 @@ button.ghost:disabled {
   box-shadow: inset 0 0 20px rgba(96, 165, 250, 0.22), 0 42px 70px rgba(2, 6, 23, 0.65);
 }
 
+.die.die-empty {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(2, 6, 23, 0.78));
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+  box-shadow: inset 0 0 14px rgba(15, 23, 42, 0.45), 0 28px 50px rgba(2, 6, 23, 0.5);
+}
+
 .die.rolling {
   animation: dieSpin 0.6s ease;
 }
@@ -878,6 +879,24 @@ button.ghost:disabled {
   box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.15), 0 2px 6px rgba(15, 23, 42, 0.35);
   align-self: center;
   justify-self: center;
+}
+
+.die-placeholder {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: rgba(148, 163, 184, 0.6);
+}
+
+.die-value {
+  position: absolute;
+  right: 1.1rem;
+  bottom: 1.1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.58);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.4);
 }
 
 .die-face-1 .pip:nth-child(1) {
@@ -997,6 +1016,65 @@ button.ghost:disabled {
   gap: 0.85rem;
 }
 
+.unfinished-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 1.1rem;
+  padding: 1rem 1.2rem;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.55);
+}
+
+.unfinished-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.unfinished-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.unfinished-sub {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.55);
+}
+
+.unfinished-list {
+  display: grid;
+  gap: 0.45rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.unfinished-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.85rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.unfinished-name {
+  font-weight: 600;
+  color: rgba(226, 232, 240, 0.85);
+}
+
+.unfinished-count {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(252, 211, 77, 0.9);
+}
+
 .status-card {
   position: relative;
   display: flex;
@@ -1047,10 +1125,13 @@ button.ghost:disabled {
   border: 1px solid rgba(148, 163, 184, 0.25);
   background: linear-gradient(160deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.82));
   color: rgba(248, 250, 252, 0.9);
-  font-size: 1.35rem;
+  font-size: 2.25rem;
   font-weight: 700;
+  letter-spacing: -0.04em;
   display: grid;
   place-items: center;
+  line-height: 1;
+  text-shadow: 0 4px 10px rgba(15, 23, 42, 0.5);
   box-shadow: 0 14px 26px rgba(2, 6, 23, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease, background 0.25s ease,
     opacity 0.2s ease;
@@ -1381,12 +1462,8 @@ button.ghost:disabled {
   .board-status-grid {
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   }
-}
-.dice-placeholder {
-  padding: 0.8rem 1.2rem;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px dashed rgba(148, 163, 184, 0.35);
-  color: rgba(226, 232, 240, 0.6);
-  font-style: italic;
+
+  .tile {
+    font-size: 1.6rem;
+  }
 }

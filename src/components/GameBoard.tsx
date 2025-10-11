@@ -49,6 +49,10 @@ function GameBoard() {
   const bestMove = useGameStore((state) => state.bestMove);
   const showHints = useGameStore((state) => state.showHints);
   const startGame = useGameStore((state) => state.startGame);
+  const unfinishedCounts = useGameStore((state) => state.unfinishedCounts);
+  const pendingTurn = useGameStore((state) => state.pendingTurn);
+  const waitingForNext = useGameStore((state) => state.waitingForNext);
+  const acknowledgeNextTurn = useGameStore((state) => state.acknowledgeNextTurn);
 
   const allTiles = useMemo(
     () => createInitialTiles(options.maxTile),
@@ -72,7 +76,7 @@ function GameBoard() {
       combo.every((value) => selectedTiles.includes(value))
     );
 
-  const canRoll = phase === 'inProgress' && !!turn && !turn.rolled;
+  const canRoll = phase === 'inProgress' && !!turn && !turn.rolled && !waitingForNext;
   const canConfirm = !!turn && turn.rolled && legalSelection;
 
   const highlightTiles = new Set<number>();
@@ -91,8 +95,15 @@ function GameBoard() {
   const activePlayerName =
     phase === 'inProgress' && turn ? players[turn.playerIndex]?.name ?? null : null;
 
-  const twinsDice = turn?.dice.length ? turn.dice : Array(options.maxTile >= 12 ? 2 : 2).fill(0);
-  const diceShowing = turn?.dice.length ? turn.dice : [];
+  const lastHistoryDice =
+    turn && turn.history.length > 0 ? turn.history[turn.history.length - 1].dice : [];
+  const displayedDice = turn?.dice.length ? turn.dice : lastHistoryDice;
+  const diceSlots = Math.max(displayedDice.length, 2);
+  const diceRender = Array.from({ length: diceSlots }, (_, index) => displayedDice[index] ?? 0);
+  const hasActiveDice = displayedDice.length > 0;
+  const displayedTotal = hasActiveDice
+    ? displayedDice.reduce((sum, value) => sum + value, 0)
+    : 0;
 
   const [turnHighlight, setTurnHighlight] = useState(false);
   const [diceRolling, setDiceRolling] = useState(false);
@@ -138,6 +149,11 @@ function GameBoard() {
     }, 900);
     return () => window.clearTimeout(timeout);
   }, [diceSequence]);
+
+  const pendingPlayerName = pendingTurn ? players[pendingTurn.playerIndex]?.name ?? null : null;
+  const indicatorName = waitingForNext && pendingPlayerName ? pendingPlayerName : activePlayerName;
+  const indicatorLabel = waitingForNext ? 'Next up' : 'Now playing';
+  const indicatorFlash = turnHighlight || waitingForNext;
 
   const handleDiceClick = () => {
     if (!canRoll) {
@@ -191,11 +207,11 @@ function GameBoard() {
         >
           <span className="dice-label">Current roll</span>
           <div className={classNames('dice-values', { rolling: diceRolling })}>
-            {twinsDice.map((value, index) => (
+            {diceRender.map((value, index) => (
               <span
                 key={`die-${index}`}
                 className={classNames('die', value ? `die-face-${value}` : 'die-empty', {
-                  rolling: diceRolling && diceShowing.length > 0
+                  rolling: diceRolling && !!turn?.dice.length
                 })}
                 aria-label={
                   value ? `Die showing ${value}` : 'Die ready to roll'
@@ -203,41 +219,53 @@ function GameBoard() {
               >
                 {value
                   ? [...Array(value)].map((_, pipIndex) => <span key={pipIndex} className="pip" />)
-                  : null}
+                  : <span className="die-placeholder">?</span>}
+                {value ? <span className="die-value">{value}</span> : null}
               </span>
             ))}
-            {diceShowing.length ? (
-              <span className="dice-total">= {diceTotal}</span>
+            {hasActiveDice ? (
+              <span className="dice-total">= {displayedTotal}</span>
             ) : (
               <span className="dice-placeholder">Tap dice to roll</span>
             )}
           </div>
           <span className="dice-hint">
-            {canRoll ? 'Tap or press Enter to roll two dice' : 'Waiting for current turn'}
+            {canRoll
+              ? hasActiveDice
+                ? 'Tap to roll again'
+                : 'Tap or press Enter to roll two dice'
+              : 'Waiting for current turn'}
           </span>
         </div>
 
-        {turnHighlight && activePlayerName && (
-          <div className="turn-toast" role="alert" aria-live="assertive">
+        {waitingForNext && pendingPlayerName && (
+          <div className="turn-toast" role="alertdialog" aria-live="assertive">
             <div className="turn-toast-body">
               <span className="turn-toast-label">Next player</span>
-              <span className="turn-toast-name">{activePlayerName}</span>
+              <span className="turn-toast-name">{pendingPlayerName}</span>
               <span className="turn-toast-sub">Ready for their go?</span>
+              <button
+                type="button"
+                className="primary turn-toast-action"
+                onClick={acknowledgeNextTurn}
+              >
+                Start turn
+              </button>
             </div>
           </div>
         )}
 
-        {activePlayerName && (
+        {indicatorName && (
           <div
             className={classNames('turn-indicator', {
-              flash: turnHighlight
+              flash: indicatorFlash
             })}
             role="status"
             aria-live="polite"
           >
             <div className="turn-indicator-dot" aria-hidden="true" />
-            <span className="turn-indicator-label">Now playing</span>
-            <span className="turn-indicator-name">{activePlayerName}</span>
+            <span className="turn-indicator-label">{indicatorLabel}</span>
+            <span className="turn-indicator-name">{indicatorName}</span>
           </div>
         )}
 
@@ -263,6 +291,21 @@ function GameBoard() {
               {turn?.rolled ? selectableCombos.length : 'Roll first'}
             </span>
           </div>
+        </div>
+
+        <div className="unfinished-panel">
+          <div className="unfinished-header">
+            <h3>Unfinished turns</h3>
+            <span className="unfinished-sub">Tracks turns that ended without a shut box</span>
+          </div>
+          <ul className="unfinished-list">
+            {players.map((player) => (
+              <li key={`unfinished-${player.id}`}>
+                <span className="unfinished-name">{player.name}</span>
+                <span className="unfinished-count">{unfinishedCounts[player.id] ?? 0}</span>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="tiles-grid">
@@ -303,7 +346,7 @@ function GameBoard() {
               type="button"
               className="primary"
               onClick={confirmMove}
-              disabled={!canConfirm}
+              disabled={!canConfirm || waitingForNext}
             >
               Confirm move
             </button>
@@ -311,11 +354,16 @@ function GameBoard() {
               type="button"
               className="secondary"
               onClick={resetSelection}
-              disabled={!hasSelection}
+              disabled={!hasSelection || waitingForNext}
             >
               Clear selection
             </button>
-            <button type="button" className="ghost" onClick={endTurn} disabled={phase !== 'inProgress'}>
+            <button
+              type="button"
+              className="ghost"
+              onClick={endTurn}
+              disabled={phase !== 'inProgress' || waitingForNext}
+            >
               End turn
             </button>
           </div>
