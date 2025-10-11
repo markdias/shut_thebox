@@ -45,7 +45,6 @@ function GameBoard() {
   const selectTile = useGameStore((state) => state.selectTile);
   const confirmMove = useGameStore((state) => state.confirmMove);
   const resetSelection = useGameStore((state) => state.resetSelection);
-  const endTurn = useGameStore((state) => state.endTurn);
   const bestMove = useGameStore((state) => state.bestMove);
   const globalHints = useGameStore((state) => state.showHints);
   const startGame = useGameStore((state) => state.startGame);
@@ -191,8 +190,6 @@ function GameBoard() {
     <section className="panel board">
       <header className="panel-header">
         <div className="board-header-left">
-          <span className="panel-kicker">Roll. React. Shut the box.</span>
-          <h2>Board</h2>
           <div className="start-round-action">
             <button
               type="button"
@@ -262,17 +259,11 @@ function GameBoard() {
                     value ? `Die showing ${value}` : 'Die ready to roll'
                   }
                 >
-                  {value
-                    ? [...Array(value)].map((_, pipIndex) => <span key={pipIndex} className="pip" />)
-                    : <span className="die-placeholder">?</span>}
-                  {value ? <span className="die-value">{value}</span> : null}
+          {value
+            ? [...Array(value)].map((_, pipIndex) => <span key={pipIndex} className="pip" />)
+            : <span className="die-placeholder">?</span>}
                 </span>
               ))}
-              {hasActiveDice ? (
-                <span className="dice-total">= {displayedTotal}</span>
-              ) : (
-                <span className="dice-placeholder">Tap dice to roll</span>
-              )}
             </div>
             <div className="dice-actions">
               <span className="dice-hint">{diceHintText}</span>
@@ -286,33 +277,41 @@ function GameBoard() {
               </button>
             </div>
           </div>
-          {hintsActive && (
-            <aside className="combo-sidebar">
-              <div className="combo-header">
-                <h3>Available combinations</h3>
-                <span className="combo-count">{selectableCombos.length}</span>
-              </div>
-              {selectableCombos.length ? (
-                <ul>
-                  {selectableCombos.map((combo, index) => (
-                    <li key={`${combo.join('-')}-${index}`}>
-                      <span className="combo-index">{index + 1}</span>
-                      <span className="combo-values">
-                        {combo.join(' + ')}
-                      </span>
-                      {bestMove &&
-                        combo.length === bestMove.length &&
-                        combo.every((value) => bestMove.includes(value)) && (
-                          <span className="badge">Best</span>
-                        )}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="muted">Roll to reveal combos.</p>
-              )}
-            </aside>
-          )}
+        {hintsActive && (
+          <aside className="combo-sidebar">
+            <div className="combo-header">
+              <h3>Available combinations</h3>
+              <span className="combo-count">{selectableCombos.length}</span>
+            </div>
+            {selectableCombos.length ? (
+              <ul>
+                {selectableCombos.map((combo, index) => (
+                  <li key={`${combo.join('-')}-${index}`}>
+                    <span className="combo-index">{index + 1}</span>
+                    <span className="combo-values">
+                      {combo.join(' + ')}
+                    </span>
+                    {bestMove &&
+                      combo.length === bestMove.length &&
+                      combo.every((value) => bestMove.includes(value)) && (
+                        <span className="badge">Best</span>
+                      )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">Roll to reveal combos.</p>
+            )}
+            <button
+              type="button"
+              className="secondary combos-clear"
+              onClick={resetSelection}
+              disabled={!hasSelection || waitingForNext}
+            >
+              Clear selection
+            </button>
+          </aside>
+        )}
         </div>
 
         <div className="board-progress">
@@ -366,6 +365,10 @@ function GameBoard() {
               {turn?.rolled ? selectableCombos.length : 'Roll first'}
             </span>
           </div>
+          <div className="status-card total-card">
+            <span className="status-card-label">Dice total</span>
+            <span className="status-card-value">{hasActiveDice ? displayedTotal : '—'}</span>
+          </div>
         </div>
 
         <div
@@ -403,24 +406,16 @@ function GameBoard() {
           >
             Confirm move
           </button>
-          <div className="move-buttons">
+          {!hintsActive && (
             <button
               type="button"
-              className="secondary"
+              className="secondary clear-inline"
               onClick={resetSelection}
               disabled={!hasSelection || waitingForNext}
             >
               Clear selection
             </button>
-            <button
-              type="button"
-              className="ghost"
-              onClick={endTurn}
-              disabled={phase !== 'inProgress' || waitingForNext}
-            >
-              End turn
-            </button>
-          </div>
+          )}
         </div>
 
       </div>

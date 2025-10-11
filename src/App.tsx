@@ -1,5 +1,4 @@
 import { useMemo, useCallback, useState, useEffect, useId } from 'react';
-import type { KeyboardEvent } from 'react';
 import { useGameStore } from './store/gameStore';
 import SettingsPanel from './components/SettingsPanel';
 import GameBoard from './components/GameBoard';
@@ -20,7 +19,8 @@ function App() {
   const showHints = useGameStore((state) => state.showHints);
   const toggleHints = useGameStore((state) => state.toggleHints);
   const unfinishedCounts = useGameStore((state) => state.unfinishedCounts);
-  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const showHeaderDetails = useGameStore((state) => Boolean(state.options.showHeaderDetails));
+  const headerCollapsed = !showHeaderDetails;
   const [winnerModalOpen, setWinnerModalOpen] = useState(false);
   const historyVisible = useGameStore((state) => state.historyVisible);
   const toggleHistory = useGameStore((state) => state.toggleHistory);
@@ -29,6 +29,9 @@ function App() {
   const cheatAutoPlay = useGameStore((state) => Boolean(state.options.cheatAutoPlay));
   const restartCountdown = useGameStore((state) => state.restartCountdown);
   const setOption = useGameStore((state) => state.setOption);
+  const endTurn = useGameStore((state) => state.endTurn);
+  const waitingForNext = useGameStore((state) => state.waitingForNext);
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
 
   const winners = useMemo(
     () => players.filter((player) => winnerIds.includes(player.id)),
@@ -79,19 +82,7 @@ function App() {
     };
   }, [theme]);
 
-  const toggleHeaderCollapsed = useCallback(() => {
-    setHeaderCollapsed((previous) => !previous);
-  }, []);
-
-  const handleProgressKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        toggleHeaderCollapsed();
-      }
-    },
-    [toggleHeaderCollapsed]
-  );
+  // Header visibility is controlled via settings (options.showHeaderDetails)
 
   const handleSaveScores = useCallback(() => {
     if (typeof window === 'undefined') {
@@ -132,28 +123,16 @@ function App() {
       <header className={`app-header ${headerCollapsed ? 'headline-collapsed' : ''}`}>
         <div className="header-glow" aria-hidden="true" />
         <div className={`header-main ${headerCollapsed ? 'collapsed' : ''}`}>
-          <div>
-            <span className="title-kicker">Neon parlour edition</span>
+          <div className="header-title-group">
             <h1>Shut the Box</h1>
-            <p className="app-subtitle">
+            <p className="app-subtitle" hidden>
               Configure your rules, roll the dice, and close every tile you can.
             </p>
           </div>
         </div>
         <div className="header-toolbar">
           <div className="progress-stack">
-            <div
-              className={`header-toggle ${headerCollapsed ? 'collapsed' : ''}`}
-              role="button"
-              tabIndex={0}
-              aria-pressed={headerCollapsed}
-              aria-expanded={!headerCollapsed}
-              aria-label={headerCollapsed ? 'Show header details' : 'Hide header details'}
-              onClick={toggleHeaderCollapsed}
-              onKeyDown={handleProgressKeyDown}
-            >
-              <span>{headerCollapsed ? 'Show header details' : 'Hide header details'}</span>
-            </div>
+            {/* Header details toggle moved to Settings panel */}
             <div className="status-block">
               <div className="status-tray">
                 <span className="status-chip">
@@ -199,13 +178,27 @@ function App() {
                 <button className="ghost" onClick={resetGame}>
                   Reset
                 </button>
+                <button
+                  className="ghost"
+                  onClick={endTurn}
+                  disabled={phase !== 'inProgress' || waitingForNext}
+                >
+                  End turn
+                </button>
+                <button
+                  className="ghost"
+                  type="button"
+                  onClick={() => setInstructionsOpen(true)}
+                >
+                  How to Play
+                </button>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      {cheatAutoPlay && (
+      {(cheatAutoPlay || typeof restartCountdown === 'number') && (
         <div className="autoplay-banner" role="status" aria-live="polite">
           <span className="autoplay-dot" aria-hidden="true" />
           <span className="autoplay-text">
@@ -215,12 +208,39 @@ function App() {
             type="button"
             className="ghost autoplay-stop"
             onClick={() => {
-              setOption('cheatAutoPlay' as any, false as any);
-              setOption('autoRetryOnFail' as any, false as any);
+              setOption('cheatAutoPlay', false);
+              setOption('autoRetryOnFail', false);
             }}
           >
             Stop
           </button>
+        </div>
+      )}
+
+      {instructionsOpen && (
+        <div className="winner-modal" role="dialog" aria-modal="true" aria-labelledby="instructions-title">
+          <div className="winner-modal-backdrop" aria-hidden="true" onClick={() => setInstructionsOpen(false)} />
+          <div className="winner-modal-panel">
+            <header className="winner-modal-header">
+              <span className="winner-modal-kicker">How to play</span>
+              <h2 className="winner-modal-title" id="instructions-title">Shut the Box — Rules</h2>
+            </header>
+            <div className="winner-modal-body">
+              <ul className="winner-scores" style={{ gap: '0.5rem' }}>
+                <li>Roll the dice to get a total.</li>
+                <li>Select one or more open tiles that sum to the rolled total.</li>
+                <li>Shut those tiles and roll again. If no moves are possible, your turn ends.</li>
+                <li>When only low tiles remain (per settings), you may roll one die.</li>
+                <li>Score is the sum of remaining open tiles when your turn ends.</li>
+                <li>Lowest score for the round wins, unless using another scoring mode.</li>
+              </ul>
+            </div>
+            <footer className="winner-modal-footer">
+              <button type="button" className="primary" onClick={() => setInstructionsOpen(false)}>
+                OK
+              </button>
+            </footer>
+          </div>
         </div>
       )}
 
