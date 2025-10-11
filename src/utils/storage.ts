@@ -1,4 +1,4 @@
-import { Player } from '../types';
+import { Player, ThemeName } from '../types';
 
 const STORAGE_KEY = 'shut-the-box:scores';
 
@@ -7,6 +7,7 @@ export interface StoredScoresSnapshot {
   round: number;
   unfinishedCounts?: Record<string, number>;
   previousWinnerIds?: string[];
+  theme?: ThemeName;
   updatedAt: number;
 }
 
@@ -39,7 +40,8 @@ export function saveScoresSnapshot(
   players: Player[],
   round: number,
   unfinishedCounts: Record<string, number>,
-  previousWinnerIds: string[]
+  previousWinnerIds: string[],
+  theme: ThemeName
 ): void {
   if (!isBrowser()) {
     return;
@@ -51,12 +53,13 @@ export function saveScoresSnapshot(
         id: player.id,
         name: player.name,
         totalScore: player.totalScore,
-      lastScore: player.lastScore,
-      hintsEnabled: player.hintsEnabled
-    })),
-    round,
-    unfinishedCounts,
-    previousWinnerIds,
+        lastScore: player.lastScore,
+        hintsEnabled: player.hintsEnabled
+      })),
+      round,
+      unfinishedCounts,
+      previousWinnerIds,
+      theme,
       updatedAt: Date.now()
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));

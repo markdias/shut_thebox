@@ -25,6 +25,7 @@ function App() {
   const historyVisible = useGameStore((state) => state.historyVisible);
   const toggleHistory = useGameStore((state) => state.toggleHistory);
   const winnerModalTitleId = useId();
+  const theme = useGameStore((state) => state.options.theme);
 
   const winners = useMemo(
     () => players.filter((player) => winnerIds.includes(player.id)),
@@ -56,6 +57,25 @@ function App() {
     }
   }, [phase, winners.length, winnersKey]);
 
+  useEffect(() => {
+    const rootEl = document.documentElement;
+    const bodyEl = document.body;
+    const themeClass = `theme-${theme}`;
+    const removeThemeClasses = (element: Element) => {
+      Array.from(element.classList)
+        .filter((cls) => cls.startsWith('theme-'))
+        .forEach((cls) => element.classList.remove(cls));
+    };
+    removeThemeClasses(rootEl);
+    removeThemeClasses(bodyEl);
+    rootEl.classList.add(themeClass);
+    bodyEl.classList.add(themeClass);
+    return () => {
+      rootEl.classList.remove(themeClass);
+      bodyEl.classList.remove(themeClass);
+    };
+  }, [theme]);
+
   const toggleHeaderCollapsed = useCallback(() => {
     setHeaderCollapsed((previous) => !previous);
   }, []);
@@ -86,7 +106,8 @@ function App() {
         lastScore: player.lastScore
       })),
       unfinishedCounts,
-      previousWinnerIds
+      previousWinnerIds,
+      theme
     };
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -101,10 +122,10 @@ function App() {
     window.setTimeout(() => {
       URL.revokeObjectURL(link.href);
     }, 0);
-  }, [phase, players, previousWinnerIds, round, unfinishedCounts]);
+  }, [phase, players, previousWinnerIds, round, unfinishedCounts, theme]);
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell theme-${theme}`}>
       <header className={`app-header ${headerCollapsed ? 'headline-collapsed' : ''}`}>
         <div className="header-glow" aria-hidden="true" />
         <div className={`header-main ${headerCollapsed ? 'collapsed' : ''}`}>

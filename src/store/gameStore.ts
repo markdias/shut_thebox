@@ -65,10 +65,13 @@ const defaultOptions: GameOptions = {
   oneDieRule: 'after789',
   scoring: 'lowest',
   targetScore: 100,
-  instantWinOnShut: true
+  instantWinOnShut: true,
+  theme: 'neon'
 };
 
 const storedSnapshot = loadScoresSnapshot();
+
+const initialTheme = storedSnapshot?.theme ?? defaultOptions.theme;
 
 const initialPlayers: Player[] =
   storedSnapshot && storedSnapshot.players.length > 0
@@ -94,12 +97,18 @@ const initialPreviousWinnerIds = storedSnapshot?.previousWinnerIds ?? [];
 export const useGameStore = create<GameStore>((set, get) => {
   const persistScores = () => {
     const state = get();
-    saveScoresSnapshot(state.players, state.round, state.unfinishedCounts, state.previousWinnerIds);
+    saveScoresSnapshot(
+      state.players,
+      state.round,
+      state.unfinishedCounts,
+      state.previousWinnerIds,
+      state.options.theme
+    );
   };
 
   return {
     phase: 'setup',
-    options: defaultOptions,
+    options: { ...defaultOptions, theme: initialTheme },
     tilesOpen: createInitialTiles(defaultOptions.maxTile),
     players: initialPlayers,
     round: initialRound,
@@ -115,7 +124,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     pendingTurn: null,
     pendingTiles: null,
     waitingForNext: false,
-    setOption: (key, value) =>
+    setOption: (key, value) => {
       set((state) => {
         const nextOptions = {
           ...state.options,
@@ -134,7 +143,9 @@ export const useGameStore = create<GameStore>((set, get) => {
         }
 
         return { options: nextOptions };
-      }),
+      });
+      persistScores();
+    },
     addPlayer: () => {
       const newId = createId();
       set((state) => ({
