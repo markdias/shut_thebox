@@ -34,6 +34,8 @@ function App() {
   const endTurn = useGameStore((state) => state.endTurn);
   const waitingForNext = useGameStore((state) => state.waitingForNext);
   const [tutorialVariant, setTutorialVariant] = useState<'desktop' | 'mobile' | null>(null);
+  const [preTutorialSettingsOpen, setPreTutorialSettingsOpen] = useState<boolean | null>(null);
+  const [preTutorialMobileMenuOpen, setPreTutorialMobileMenuOpen] = useState<boolean | null>(null);
   const initialIsMobileViewport =
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'
       ? window.matchMedia('(max-width: 720px)').matches
@@ -143,6 +145,22 @@ function App() {
         placement: 'right'
       },
       {
+        id: 'add-players',
+        title: 'Seat everyone at the table',
+        description:
+          'Open the Settings sidebar to add, rename, or remove players. Use “Add player” to include another friend before the first roll.',
+        targetId: 'add-player-button',
+        placement: 'left'
+      },
+      {
+        id: 'player-hints',
+        title: 'Enable hints per player',
+        description:
+          'Each player row has its own Hints toggle. Let new players opt in while keeping experienced players on manual mode.',
+        targetId: 'player-hints-toggle',
+        placement: 'left'
+      },
+      {
         id: 'dice-zone',
         title: 'Roll the dice',
         description:
@@ -157,6 +175,14 @@ function App() {
           'Click tiles that add up to your dice total. Hints can show valid options when enabled.',
         targetId: 'tiles-grid',
         placement: 'top'
+      },
+      {
+        id: 'global-hints',
+        title: 'Toggle hints during play',
+        description:
+          'Use “Show Hints” in the header toolbar to reveal or hide suggested tile combinations at any time.',
+        targetId: 'header-hints-toggle',
+        placement: 'bottom'
       },
       {
         id: 'confirm-move',
@@ -182,9 +208,9 @@ function App() {
     () => [
       {
         id: 'mobile-menu',
-        title: 'Open the mobile menu',
+        title: 'Use the mobile menu',
         description:
-          'Tap the Menu button to reveal settings, history, hints, and the tutorial at any time.',
+          'Tap the Menu button to reveal settings, history, hints, and this tutorial. The panel is open now so you can explore the options.',
         targetId: 'mobile-menu-toggle',
         placement: 'bottom'
       },
@@ -195,6 +221,22 @@ function App() {
           'Use “Start Game” to kick things off or begin a fresh round after scoring.',
         targetId: 'start-round-button',
         placement: 'right'
+      },
+      {
+        id: 'add-players',
+        title: 'Add and manage players',
+        description:
+          'Scroll to the Players section inside Settings to add, rename, or remove players before a round begins. The “Add player” button makes space for another opponent.',
+        targetId: 'add-player-button',
+        placement: 'left'
+      },
+      {
+        id: 'player-hints',
+        title: 'Set personal hint preferences',
+        description:
+          'Each player can toggle their own hints using the button in their row, perfect for mixing newcomers with veterans.',
+        targetId: 'player-hints-toggle',
+        placement: 'left'
       },
       {
         id: 'dice-zone',
@@ -211,6 +253,14 @@ function App() {
           'Tap tiles that add up to your roll. Selected tiles glow before you confirm the move.',
         targetId: 'tiles-grid',
         placement: 'top'
+      },
+      {
+        id: 'global-hints',
+        title: 'Show hints mid-game',
+        description:
+          'Need help during a turn? Use “Show Hints” in the header menu to reveal suggestions, then hide them again when you are ready.',
+        targetId: 'header-hints-toggle',
+        placement: 'bottom'
       },
       {
         id: 'confirm-move',
@@ -230,6 +280,35 @@ function App() {
       : tutorialVariant === 'mobile'
         ? mobileTutorialSteps
         : null;
+
+  const startTutorial = useCallback(() => {
+    setPreTutorialSettingsOpen(settingsOpen);
+    if (!settingsOpen) {
+      toggleSettings(true);
+    }
+    if (isMobileViewport) {
+      setPreTutorialMobileMenuOpen(mobileMenuOpen);
+      setMobileMenuOpen(true);
+    }
+    setTutorialVariant(isMobileViewport ? 'mobile' : 'desktop');
+  }, [isMobileViewport, mobileMenuOpen, settingsOpen, setMobileMenuOpen, toggleSettings]);
+
+  const handleCloseTutorial = useCallback(() => {
+    setTutorialVariant(null);
+    if (preTutorialSettingsOpen !== null) {
+      toggleSettings(preTutorialSettingsOpen);
+      setPreTutorialSettingsOpen(null);
+    }
+    if (preTutorialMobileMenuOpen !== null) {
+      setMobileMenuOpen(preTutorialMobileMenuOpen);
+      setPreTutorialMobileMenuOpen(null);
+    }
+  }, [
+    preTutorialMobileMenuOpen,
+    preTutorialSettingsOpen,
+    setMobileMenuOpen,
+    toggleSettings
+  ]);
 
   const renderStatusTray = (extraClass?: string) => {
     const trayClass = ['status-tray', extraClass].filter(Boolean).join(' ');
@@ -276,7 +355,11 @@ function App() {
         <button className="secondary" onClick={createMenuActionHandler(() => toggleHistory(!historyVisible))}>
           {historyVisible ? 'Hide History' : 'Show History'}
         </button>
-        <button className="secondary" onClick={createMenuActionHandler(toggleHints)}>
+        <button
+          className="secondary"
+          data-tutorial-target="header-hints-toggle"
+          onClick={createMenuActionHandler(toggleHints)}
+        >
           {showHints ? 'Hide Hints' : 'Show Hints'}
         </button>
         <button
@@ -301,9 +384,7 @@ function App() {
           className="ghost"
           type="button"
           data-tutorial-target="header-how-to-play"
-          onClick={createMenuActionHandler(() =>
-            setTutorialVariant(isMobileViewport ? 'mobile' : 'desktop')
-          )}
+          onClick={startTutorial}
         >
           How to Play
         </button>
@@ -436,7 +517,7 @@ function App() {
       {tutorialVariant && activeTutorialSteps && (
         <TutorialOverlay
           steps={activeTutorialSteps}
-          onClose={() => setTutorialVariant(null)}
+          onClose={handleCloseTutorial}
           variantLabel={tutorialVariant === 'mobile' ? 'Mobile' : 'Desktop'}
         />
       )}

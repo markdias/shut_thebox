@@ -55,6 +55,7 @@ function PlayersPanel() {
                 <button
                   type="button"
                   className={`hint-toggle ${player.hintsEnabled ? 'on' : 'off'}`}
+                  data-tutorial-target="player-hints-toggle"
                   onClick={() => togglePlayerHints(player.id)}
                 >
                   Hints {player.hintsEnabled ? 'On' : 'Off'}
@@ -63,7 +64,13 @@ function PlayersPanel() {
             );
           })}
         </ul>
-        <button type="button" className="secondary" onClick={addPlayer} disabled={phase !== 'setup'}>
+        <button
+          type="button"
+          className="secondary"
+          data-tutorial-target="add-player-button"
+          onClick={addPlayer}
+          disabled={phase !== 'setup'}
+        >
           Add player
         </button>
       </div>

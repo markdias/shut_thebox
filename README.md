@@ -35,6 +35,7 @@ Feel free to deploy the production build with any static host after running `npm
 - Click **How to Play** in the header (or open the Menu on mobile and choose it there) to start the interactive walkthrough.
 - Use **Next** and **Back** to move through contextual highlights. **End tutorial** exits immediately.
 - The overlay locks pointer input outside the focused element so the walkthrough can be followed without accidental moves.
+- Dedicated steps explain how to add players, toggle personal hints, and switch round-wide hints mid-game so new competitors can join quickly.
 
 ### Deploying to GitHub Pages
 
