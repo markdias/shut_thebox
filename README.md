@@ -19,6 +19,7 @@ This launches Vite's development server (default port `5173`). Open the printed 
 - Scoring modes: lowest single-round remainder, cumulative race to a target, or instant win on a shut box.
 - Automatic detection of legal tile combinations for each roll, including highlights and optional "best move" hints.
 - History log of every turn and instant win shout-outs.
+- Guided step-by-step tutorial overlay for both desktop and mobile layouts. Launch it any time from the **How to Play** button.
 
 ## Project structure
 
@@ -28,6 +29,13 @@ This launches Vite's development server (default port `5173`). Open the printed 
 - `src/styles`: Global and component styling.
 
 Feel free to deploy the production build with any static host after running `npm run build`.
+
+## Guided tutorial
+
+- Click **How to Play** in the header (or open the Menu on mobile and choose it there) to start the interactive walkthrough.
+- Use **Next** and **Back** to move through contextual highlights. **End tutorial** exits immediately.
+- The overlay locks pointer input outside the focused element so the walkthrough can be followed without accidental moves.
+
 ### Deploying to GitHub Pages
 
 This is a static Vite app. The `dist` folder contains a complete site (index.html + assets). To publish via GitHub Pages:

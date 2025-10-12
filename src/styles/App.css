@@ -1720,6 +1720,128 @@ button.ghost:disabled {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Tutorial overlay */
+
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  font-family: inherit;
+}
+
+.tutorial-overlay-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
+.tutorial-scrim {
+  position: absolute;
+  background: rgba(6, 12, 24, 0.74);
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+.tutorial-spotlight {
+  position: absolute;
+  border-radius: 1.25rem;
+  border: 2px solid rgba(191, 219, 254, 0.85);
+  box-shadow: 0 0 0 6px rgba(30, 64, 175, 0.32), 0 18px 42px rgba(8, 47, 73, 0.45);
+  pointer-events: none;
+}
+
+.tutorial-callout {
+  position: fixed;
+  max-width: min(420px, calc(100vw - 2.5rem));
+  padding: 1.4rem 1.6rem;
+  border-radius: 1.2rem;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(30, 64, 175, 0.78));
+  color: #f8fafc;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.45);
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tutorial-step-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  opacity: 0.7;
+}
+
+.tutorial-step-title {
+  font-size: 1.25rem;
+  margin: 0;
+  letter-spacing: 0.03em;
+}
+
+.tutorial-step-description {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.tutorial-actions {
+  margin-top: 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tutorial-progress-buttons {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.tutorial-callout .ghost {
+  color: rgba(248, 250, 252, 0.8);
+}
+
+.tutorial-callout .secondary {
+  color: rgba(241, 245, 249, 0.92);
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
+.tutorial-callout .primary {
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  border: none;
+}
+
+@media (max-width: 720px) {
+  .tutorial-callout {
+    max-width: calc(100vw - 1.5rem);
+    padding: 1.2rem 1.3rem;
+    border-radius: 1rem;
+  }
+
+  .tutorial-step-title {
+    font-size: 1.1rem;
+  }
+
+  .tutorial-step-description {
+    font-size: 0.9rem;
+  }
+
+  .tutorial-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tutorial-progress-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .tutorial-progress-buttons button {
+    flex: 1;
+  }
+}
+
 .confirm-prompt:hover:not(:disabled) {
   transform: translateY(-3px) scale(1.01);
   box-shadow: 0 44px 72px rgba(37, 99, 235, 0.4);

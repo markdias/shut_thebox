@@ -4,6 +4,7 @@ import SettingsPanel from './components/SettingsPanel';
 import GameBoard from './components/GameBoard';
 import HistoryLog from './components/HistoryLog';
 import PlayersPanel from './components/PlayersPanel';
+import TutorialOverlay, { TutorialStep } from './components/TutorialOverlay';
 import './styles/App.css';
 
 function App() {
@@ -32,7 +33,7 @@ function App() {
   const setOption = useGameStore((state) => state.setOption);
   const endTurn = useGameStore((state) => state.endTurn);
   const waitingForNext = useGameStore((state) => state.waitingForNext);
-  const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const [tutorialVariant, setTutorialVariant] = useState<'desktop' | 'mobile' | null>(null);
   const initialIsMobileViewport =
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'
       ? window.matchMedia('(max-width: 720px)').matches
@@ -131,6 +132,105 @@ function App() {
     [isMobileViewport]
   );
 
+  const desktopTutorialSteps: TutorialStep[] = useMemo(
+    () => [
+      {
+        id: 'start-round',
+        title: 'Start a new round',
+        description:
+          'Press “Start Game” to begin playing or launch the next round when everyone is ready.',
+        targetId: 'start-round-button',
+        placement: 'right'
+      },
+      {
+        id: 'dice-zone',
+        title: 'Roll the dice',
+        description:
+          'Use the dice area to roll. It highlights when it is your turn so you know when to tap.',
+        targetId: 'dice-zone',
+        placement: 'bottom'
+      },
+      {
+        id: 'tiles-grid',
+        title: 'Pick tiles that match the roll',
+        description:
+          'Click tiles that add up to your dice total. Hints can show valid options when enabled.',
+        targetId: 'tiles-grid',
+        placement: 'top'
+      },
+      {
+        id: 'confirm-move',
+        title: 'Confirm your move',
+        description:
+          'Use “Confirm move” to shut the selected tiles and keep your turn going.',
+        targetId: 'confirm-move-button',
+        placement: 'top'
+      },
+      {
+        id: 'end-turn',
+        title: 'Wrap up a turn',
+        description:
+          'When you are stuck, “End turn” advances play. You can also open settings, history, or hints from this toolbar.',
+        targetId: 'header-end-turn',
+        placement: 'bottom'
+      }
+    ],
+    []
+  );
+
+  const mobileTutorialSteps: TutorialStep[] = useMemo(
+    () => [
+      {
+        id: 'mobile-menu',
+        title: 'Open the mobile menu',
+        description:
+          'Tap the Menu button to reveal settings, history, hints, and the tutorial at any time.',
+        targetId: 'mobile-menu-toggle',
+        placement: 'bottom'
+      },
+      {
+        id: 'start-round',
+        title: 'Start a new round',
+        description:
+          'Use “Start Game” to kick things off or begin a fresh round after scoring.',
+        targetId: 'start-round-button',
+        placement: 'right'
+      },
+      {
+        id: 'dice-zone',
+        title: 'Roll the dice',
+        description:
+          'Tap the dice pad to roll. It pulses when it is ready so you know when you can act.',
+        targetId: 'dice-zone',
+        placement: 'bottom'
+      },
+      {
+        id: 'tiles-grid',
+        title: 'Select tiles to shut',
+        description:
+          'Tap tiles that add up to your roll. Selected tiles glow before you confirm the move.',
+        targetId: 'tiles-grid',
+        placement: 'top'
+      },
+      {
+        id: 'confirm-move',
+        title: 'Confirm and continue',
+        description:
+          '“Confirm move” locks in your selection. Keep rolling until you cannot make another play.',
+        targetId: 'confirm-move-button',
+        placement: 'top'
+      }
+    ],
+    []
+  );
+
+  const activeTutorialSteps =
+    tutorialVariant === 'desktop'
+      ? desktopTutorialSteps
+      : tutorialVariant === 'mobile'
+        ? mobileTutorialSteps
+        : null;
+
   const renderStatusTray = (extraClass?: string) => {
     const trayClass = ['status-tray', extraClass].filter(Boolean).join(' ');
     return (
@@ -191,6 +291,7 @@ function App() {
         </button>
         <button
           className="ghost"
+          data-tutorial-target="header-end-turn"
           onClick={createMenuActionHandler(endTurn)}
           disabled={phase !== 'inProgress' || waitingForNext}
         >
@@ -199,7 +300,10 @@ function App() {
         <button
           className="ghost"
           type="button"
-          onClick={createMenuActionHandler(() => setInstructionsOpen(true))}
+          data-tutorial-target="header-how-to-play"
+          onClick={createMenuActionHandler(() =>
+            setTutorialVariant(isMobileViewport ? 'mobile' : 'desktop')
+          )}
         >
           How to Play
         </button>
@@ -265,6 +369,7 @@ function App() {
                     <button
                       type="button"
                       className={`mobile-menu-button ${mobileMenuOpen ? 'open' : ''}`}
+                      data-tutorial-target="mobile-menu-toggle"
                       aria-expanded={mobileMenuOpen}
                       aria-controls={mobileMenuPanelId}
                       onClick={() => setMobileMenuOpen((open) => !open)}
@@ -328,31 +433,12 @@ function App() {
         </div>
       )}
 
-      {instructionsOpen && (
-        <div className="winner-modal" role="dialog" aria-modal="true" aria-labelledby="instructions-title">
-          <div className="winner-modal-backdrop" aria-hidden="true" onClick={() => setInstructionsOpen(false)} />
-          <div className="winner-modal-panel">
-            <header className="winner-modal-header">
-              <span className="winner-modal-kicker">How to play</span>
-              <h2 className="winner-modal-title" id="instructions-title">Shut the Box — Rules</h2>
-            </header>
-            <div className="winner-modal-body">
-              <ul className="winner-scores" style={{ gap: '0.5rem' }}>
-                <li>Roll the dice to get a total.</li>
-                <li>Select one or more open tiles that sum to the rolled total.</li>
-                <li>Shut those tiles and roll again. If no moves are possible, your turn ends.</li>
-                <li>When only low tiles remain (per settings), you may roll one die.</li>
-                <li>Score is the sum of remaining open tiles when your turn ends.</li>
-                <li>Lowest score for the round wins, unless using another scoring mode.</li>
-              </ul>
-            </div>
-            <footer className="winner-modal-footer">
-              <button type="button" className="primary" onClick={() => setInstructionsOpen(false)}>
-                OK
-              </button>
-            </footer>
-          </div>
-        </div>
+      {tutorialVariant && activeTutorialSteps && (
+        <TutorialOverlay
+          steps={activeTutorialSteps}
+          onClose={() => setTutorialVariant(null)}
+          variantLabel={tutorialVariant === 'mobile' ? 'Mobile' : 'Desktop'}
+        />
       )}
 
       {phase === 'finished' && winners.length > 0 && winnerModalOpen && (
