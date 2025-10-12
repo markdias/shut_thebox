@@ -402,6 +402,10 @@
   min-width: 140px;
 }
 
+.header-actions.desktop-header-actions {
+  display: none;
+}
+
 .mobile-header-toggle {
   display: flex;
   justify-content: center;
@@ -549,6 +553,18 @@
   width: 100%;
   min-width: 0;
   flex: 1 1 auto;
+}
+
+.tutorial-launch-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.tutorial-launch-controls small {
+  max-width: 28rem;
+  line-height: 1.4;
 }
 
 .status-tray.mobile-visible {
@@ -2520,6 +2536,12 @@ button.ghost:disabled {
 @media (max-width: 1200px) {
   .status-chip.wide {
     min-width: unset;
+  }
+}
+
+@media (min-width: 721px) {
+  .header-actions.desktop-header-actions {
+    display: flex;
   }
 }
 

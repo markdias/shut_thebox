@@ -19,6 +19,11 @@ This launches Vite's development server (default port `5173`). Open the printed 
 - Scoring modes: lowest single-round remainder, cumulative race to a target, or instant win on a shut box.
 - Automatic detection of legal tile combinations for each roll, including highlights and optional "best move" hints.
 - History log of every turn and instant win shout-outs.
+- Guided in-app tutorial that highlights each area of the board and walks through a full turn.
+
+### Tutorial overlay
+
+The tutorial now launches automatically the first time you open the game on desktop or mobile, and you can relaunch it from the header or the Settings panel at any time. It dims the rest of the interface, highlights the area being described, and blocks stray clicks so you can focus on the current action. Use the **Next** and **Back** buttons (or arrow keys) to move between steps, or **End tutorial** at any time to return to normal play. Once you've finished the tour, we remember that preference so it stays out of the way until you launch it again manually.
 
 ## Project structure
 

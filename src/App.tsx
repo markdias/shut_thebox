@@ -4,7 +4,49 @@ import SettingsPanel from './components/SettingsPanel';
 import GameBoard from './components/GameBoard';
 import HistoryLog from './components/HistoryLog';
 import PlayersPanel from './components/PlayersPanel';
+import TutorialOverlay, { TutorialStep } from './components/TutorialOverlay';
 import './styles/App.css';
+
+const TUTORIAL_STORAGE_KEY = 'shutthebox:tutorialSeen';
+
+const TUTORIAL_STEPS: TutorialStep[] = [
+  {
+    id: 'start',
+    targetId: 'start-round',
+    title: 'Start the round',
+    description: 'Press “Start Game” to kick off play or begin a new round when everyone is ready.',
+    placement: 'bottom'
+  },
+  {
+    id: 'dice',
+    targetId: 'dice-zone',
+    title: 'Roll the dice',
+    description: 'Click the dice area (or press Enter) to roll. The game highlights how many dice you can use.',
+    placement: 'right'
+  },
+  {
+    id: 'tiles',
+    targetId: 'tiles-grid',
+    title: 'Pick tiles to shut',
+    description:
+      'Select tiles that add up to the total you rolled. With hints on, valid options glow to help you choose.',
+    placement: 'top'
+  },
+  {
+    id: 'confirm',
+    targetId: 'confirm-move',
+    title: 'Confirm your move',
+    description: 'Lock in your selection to finish the roll. If no moves remain, the turn ends automatically.',
+    placement: 'top'
+  },
+  {
+    id: 'status',
+    targetId: 'status-tray',
+    title: 'Track the round',
+    description: 'These chips keep score of the round, current phase, active player, and hint status at a glance.',
+    placement: 'bottom'
+  }
+];
 
 function App() {
   const phase = useGameStore((state) => state.phase);
@@ -34,6 +76,14 @@ function App() {
   const endTurn = useGameStore((state) => state.endTurn);
   const waitingForNext = useGameStore((state) => state.waitingForNext);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [tutorialStepIndex, setTutorialStepIndex] = useState(0);
+  const [hasSeenTutorial, setHasSeenTutorial] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return window.localStorage.getItem(TUTORIAL_STORAGE_KEY) === 'true';
+  });
   const initialIsMobileViewport =
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'
       ? window.matchMedia('(max-width: 720px)').matches
@@ -41,6 +91,43 @@ function App() {
   const [isMobileViewport, setIsMobileViewport] = useState(initialIsMobileViewport);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileChipsVisible, setMobileChipsVisible] = useState(false);
+  const tutorialSteps = TUTORIAL_STEPS;
+
+  const startTutorial = useCallback(() => {
+    setInstructionsOpen(false);
+    setMobileMenuOpen(false);
+    setMobileChipsVisible(false);
+    setTutorialStepIndex(0);
+    setTutorialOpen(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const storedValue = window.localStorage.getItem(TUTORIAL_STORAGE_KEY) === 'true';
+    setHasSeenTutorial(storedValue);
+    if (!storedValue) {
+      startTutorial();
+    }
+  }, [startTutorial]);
+
+  const closeTutorial = useCallback(() => {
+    setTutorialOpen(false);
+    setTutorialStepIndex(0);
+    setHasSeenTutorial(true);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(TUTORIAL_STORAGE_KEY, 'true');
+    }
+  }, []);
+
+  const goToNextTutorialStep = useCallback(() => {
+    setTutorialStepIndex((index) => Math.min(index + 1, tutorialSteps.length - 1));
+  }, [tutorialSteps.length]);
+
+  const goToPreviousTutorialStep = useCallback(() => {
+    setTutorialStepIndex((index) => Math.max(0, index - 1));
+  }, []);
 
   const winners = useMemo(
     () => players.filter((player) => winnerIds.includes(player.id)),
@@ -90,6 +177,21 @@ function App() {
       bodyEl.classList.remove(themeClass);
     };
   }, [theme]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    const { body } = document;
+    if (tutorialOpen) {
+      body.classList.add('tutorial-active');
+    } else {
+      body.classList.remove('tutorial-active');
+    }
+    return () => {
+      body.classList.remove('tutorial-active');
+    };
+  }, [tutorialOpen]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -143,7 +245,7 @@ function App() {
   const renderStatusTray = (extraClass?: string) => {
     const trayClass = ['status-tray', extraClass].filter(Boolean).join(' ');
     return (
-      <div className={trayClass}>
+      <div className={trayClass} data-tutorial-id="status-tray">
         <span className="status-chip">
           <span className="status-label">Round</span>
           <strong>{round}</strong>
@@ -204,6 +306,13 @@ function App() {
           disabled={phase !== 'inProgress' || waitingForNext}
         >
           End turn
+        </button>
+        <button
+          className="ghost"
+          type="button"
+          onClick={createMenuActionHandler(startTutorial)}
+        >
+          Start tutorial
         </button>
         <button
           className="ghost"
@@ -313,6 +422,7 @@ function App() {
               </div>
             </div>
           </div>
+          {!isMobileViewport && renderHeaderActions('desktop-header-actions')}
         </div>
       </header>
 
@@ -402,11 +512,20 @@ function App() {
         </section>
         {settingsOpen && (
           <aside className="sidebar">
-            <SettingsPanel />
+            <SettingsPanel onStartTutorial={startTutorial} tutorialSeen={hasSeenTutorial} />
             <PlayersPanel />
           </aside>
         )}
       </main>
+      {tutorialOpen && (
+        <TutorialOverlay
+          steps={tutorialSteps}
+          stepIndex={tutorialStepIndex}
+          onNext={goToNextTutorialStep}
+          onPrev={goToPreviousTutorialStep}
+          onClose={closeTutorial}
+        />
+      )}
     </div>
   );
 }

@@ -196,6 +196,7 @@ function GameBoard() {
               className="start-round-button"
               onClick={startGame}
               disabled={startDisabled}
+              data-tutorial-id="start-round"
             >
               {startLabel}
             </button>
@@ -238,6 +239,7 @@ function GameBoard() {
             tabIndex={canRoll ? 0 : -1}
             aria-disabled={!canRoll}
             aria-label={canRoll ? 'Roll two dice' : 'Dice roll unavailable'}
+            data-tutorial-id="dice-zone"
             onClick={handleDiceClick}
             onKeyDown={(event) => {
               if (!canRoll) return;
@@ -375,6 +377,7 @@ function GameBoard() {
           className={classNames('tiles-grid', {
             active: tilesActive
           })}
+          data-tutorial-id="tiles-grid"
         >
           {allTiles.map((tile) => {
             const open = tilesOpen.includes(tile);
@@ -403,6 +406,7 @@ function GameBoard() {
             className="confirm-prompt"
             onClick={confirmMove}
             disabled={!canConfirm || waitingForNext}
+            data-tutorial-id="confirm-move"
           >
             Confirm move
           </button>

@@ -5,7 +5,12 @@ import DropdownSelect from './ui/DropdownSelect';
 
 const tileOptions: GameOptions['maxTile'][] = [9, 10, 12];
 
-function SettingsPanel() {
+type SettingsPanelProps = {
+  onStartTutorial?: () => void;
+  tutorialSeen?: boolean;
+};
+
+function SettingsPanel({ onStartTutorial, tutorialSeen }: SettingsPanelProps) {
   const options = useGameStore((state) => state.options);
   const setOption = useGameStore((state) => state.setOption);
   const startGame = useGameStore((state) => state.startGame);
@@ -47,6 +52,20 @@ function SettingsPanel() {
           <span className="field-label">Last updated</span>
           <span className="version-value">{lastUpdated ?? '—'}</span>
         </label>
+
+        <div className="field static-field">
+          <span className="field-label">Guided tutorial</span>
+          <div className="tutorial-launch-controls">
+            <button type="button" className="secondary" onClick={onStartTutorial} disabled={!onStartTutorial}>
+              Launch tutorial
+            </button>
+            <small className="muted">
+              {tutorialSeen
+                ? 'The walkthrough has been completed on this device. Launch it again any time from here or the header.'
+                : 'New players will see the tutorial automatically once. You can also launch it manually whenever you like.'}
+            </small>
+          </div>
+        </div>
 
         <label className="field">
           <span className="field-label">Highest tile</span>
