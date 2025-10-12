@@ -295,8 +295,8 @@ function App() {
                     >
                       {mobileChipsVisible ? 'Hide status details' : 'Show status details'}
                     </button>
-                    {mobileChipsVisible && renderStatusTray('mobile-visible mobile-status-tray')}
                   </div>
+                  {mobileChipsVisible && renderStatusTray('mobile-visible mobile-status-tray')}
                 </>
               ) : (
                 <>
