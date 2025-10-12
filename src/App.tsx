@@ -25,7 +25,6 @@ function App() {
   const historyVisible = useGameStore((state) => state.historyVisible);
   const toggleHistory = useGameStore((state) => state.toggleHistory);
   const mobileMenuPanelId = useId();
-  const mobileStatusPanelId = `${mobileMenuPanelId}-status`;
   const winnerModalTitleId = useId();
   const theme = useGameStore((state) => state.options.theme);
   const cheatAutoPlay = useGameStore((state) => Boolean(state.options.cheatAutoPlay));
@@ -40,7 +39,7 @@ function App() {
       : false;
   const [isMobileViewport, setIsMobileViewport] = useState(initialIsMobileViewport);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobileChipsVisible, setMobileChipsVisible] = useState(false);
+  const [mobileChipsVisible, setMobileChipsVisible] = useState(!initialIsMobileViewport);
 
   const winners = useMemo(
     () => players.filter((player) => winnerIds.includes(player.id)),
@@ -99,7 +98,7 @@ function App() {
     const query = window.matchMedia('(max-width: 720px)');
     const applyMatches = (matches: boolean) => {
       setIsMobileViewport(matches);
-      setMobileChipsVisible(false);
+      setMobileChipsVisible(matches ? false : true);
       setMobileMenuOpen(false);
     };
 
@@ -122,22 +121,14 @@ function App() {
     };
   }, []);
 
-  const toggleMobileMenu = useCallback(() => {
-    setMobileMenuOpen((open) => {
-      if (open) {
-        setMobileChipsVisible(false);
-      }
-      return !open;
-    });
-  }, []);
-
   const createMenuActionHandler = useCallback(
     (action: () => void) => () => {
       action();
-      setMobileMenuOpen(false);
-      setMobileChipsVisible(false);
+      if (isMobileViewport) {
+        setMobileMenuOpen(false);
+      }
     },
-    []
+    [isMobileViewport]
   );
 
   const renderStatusTray = (extraClass?: string) => {
@@ -268,49 +259,51 @@ function App() {
           <div className="progress-stack">
             {/* Header details toggle moved to Settings panel */}
             <div className="status-block">
-              <div className="mobile-header-toggle">
-                <button
-                  type="button"
-                  className={`mobile-menu-button ${mobileMenuOpen ? 'open' : ''}`}
-                  aria-expanded={mobileMenuOpen}
-                  aria-controls={mobileMenuPanelId}
-                  onClick={toggleMobileMenu}
-                >
-                  <span className="sr-only">
-                    {mobileMenuOpen ? 'Close header menu' : 'Open header menu'}
-                  </span>
-                  <span aria-hidden="true" className="mobile-menu-icon">
-                    <span className="mobile-menu-bar" />
-                    <span className="mobile-menu-bar" />
-                    <span className="mobile-menu-bar" />
-                  </span>
-                  <span className="mobile-menu-label">Menu</span>
-                </button>
-              </div>
-              <div
-                id={mobileMenuPanelId}
-                className={`mobile-menu-panel ${mobileMenuOpen ? 'open' : ''}`}
-                aria-hidden={!mobileMenuOpen}
-              >
-                {renderHeaderActions('mobile-menu-actions')}
-                <div className="mobile-menu-divider" aria-hidden="true" />
-                <div className={`mobile-status-panel ${mobileMenuOpen ? 'open' : ''}`}>
-                  <button
-                    type="button"
-                    className="mobile-status-toggle"
-                    aria-expanded={mobileChipsVisible}
-                    aria-controls={mobileStatusPanelId}
-                    onClick={() => setMobileChipsVisible((visible) => !visible)}
+              {isMobileViewport ? (
+                <>
+                  <div className="mobile-header-toggle">
+                    <button
+                      type="button"
+                      className={`mobile-menu-button ${mobileMenuOpen ? 'open' : ''}`}
+                      aria-expanded={mobileMenuOpen}
+                      aria-controls={mobileMenuPanelId}
+                      onClick={() => setMobileMenuOpen((open) => !open)}
+                    >
+                      <span className="sr-only">
+                        {mobileMenuOpen ? 'Close header menu' : 'Open header menu'}
+                      </span>
+                      <span aria-hidden="true" className="mobile-menu-icon">
+                        <span className="mobile-menu-bar" />
+                        <span className="mobile-menu-bar" />
+                        <span className="mobile-menu-bar" />
+                      </span>
+                      <span className="mobile-menu-label">Menu</span>
+                    </button>
+                  </div>
+                  <div
+                    id={mobileMenuPanelId}
+                    className={`mobile-menu-panel ${mobileMenuOpen ? 'open' : ''}`}
+                    aria-hidden={!mobileMenuOpen}
                   >
-                    {mobileChipsVisible ? 'Hide status details' : 'Show status details'}
-                  </button>
-                  {mobileChipsVisible && (
-                    <div id={mobileStatusPanelId} className="mobile-status-region">
-                      {renderStatusTray('mobile-visible mobile-status-tray')}
-                    </div>
-                  )}
-                </div>
-              </div>
+                    {renderHeaderActions('mobile-menu-actions')}
+                  </div>
+                  <div className={`mobile-status-panel ${mobileMenuOpen ? 'open' : ''}`}>
+                    <button
+                      type="button"
+                      className="mobile-status-toggle"
+                      onClick={() => setMobileChipsVisible((visible) => !visible)}
+                    >
+                      {mobileChipsVisible ? 'Hide status details' : 'Show status details'}
+                    </button>
+                  </div>
+                  {mobileChipsVisible && renderStatusTray('mobile-visible mobile-status-tray')}
+                </>
+              ) : (
+                <>
+                  {renderStatusTray()}
+                  {renderHeaderActions()}
+                </>
+              )}
             </div>
           </div>
         </div>
