@@ -158,6 +158,7 @@ function GameBoard() {
   }, [diceSequence]);
 
   const pendingPlayerName = pendingTurn ? players[pendingTurn.playerIndex]?.name ?? null : null;
+  const showTurnToast = waitingForNext && !!pendingPlayerName;
   const indicatorName = waitingForNext && pendingPlayerName ? pendingPlayerName : activePlayerName;
   const indicatorLabel = waitingForNext ? 'Next up' : 'Now playing';
   const indicatorFlash = turnHighlight || waitingForNext;
@@ -171,6 +172,8 @@ function GameBoard() {
 
   const diceActive = phase === 'inProgress' && !waitingForNext && (!turn || !turn.rolled);
   const tilesActive = !!turn && turn.rolled && !waitingForNext;
+  const confirmReady = canConfirm && !waitingForNext;
+  const startReady = !startDisabled;
 
   const handleDiceClick = () => {
     if (!canRoll) {
@@ -193,7 +196,9 @@ function GameBoard() {
           <div className="start-round-action">
             <button
               type="button"
-              className="start-round-button"
+              className={classNames('start-round-button', {
+                'action-ready': startReady
+              })}
               onClick={startGame}
               disabled={startDisabled}
             >
@@ -206,12 +211,12 @@ function GameBoard() {
       <div className="panel-body">
         <div className="dice-section">
           <aside
-            aria-hidden={!(waitingForNext && pendingPlayerName)}
+            aria-hidden={!showTurnToast}
             className={classNames('turn-sidebar', {
-              visible: waitingForNext && !!pendingPlayerName
+              visible: showTurnToast
             })}
           >
-            {waitingForNext && pendingPlayerName ? (
+            {showTurnToast ? (
               <div className="turn-toast" role="alertdialog" aria-live="assertive">
                 <div className="turn-toast-body">
                   <span className="turn-toast-label">Next player</span>
@@ -219,7 +224,9 @@ function GameBoard() {
                   <span className="turn-toast-sub">Ready for their go?</span>
                   <button
                     type="button"
-                    className="primary turn-toast-action"
+                    className={classNames('primary', 'turn-toast-action', {
+                      'action-ready': waitingForNext
+                    })}
                     onClick={acknowledgeNextTurn}
                   >
                     Start turn
@@ -325,7 +332,16 @@ function GameBoard() {
             <div className="progress-bar" style={{ width: `${progressPercent}%` }} />
           </div>
           {showRoundIncomplete && (
-            <div className="board-progress-note">Box not shut this round.</div>
+            <div
+              className="board-progress-note board-progress-note-alert action-ready"
+              role="status"
+              aria-live="assertive"
+            >
+              <span className="note-icon" aria-hidden="true">
+                !
+              </span>
+              <span className="note-text">BOX NOT SHUT THIS ROUND.</span>
+            </div>
           )}
         </div>
 
@@ -400,7 +416,9 @@ function GameBoard() {
         <div className="board-controls">
           <button
             type="button"
-            className="confirm-prompt"
+            className={classNames('confirm-prompt', {
+              'action-ready': confirmReady
+            })}
             onClick={confirmMove}
             disabled={!canConfirm || waitingForNext}
           >

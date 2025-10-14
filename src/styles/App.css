@@ -1507,6 +1507,67 @@ button.ghost:disabled {
   box-shadow: inset 0 0 18px rgba(56, 189, 248, 0.18);
 }
 
+.board-progress-note.board-progress-note-alert {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.65rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #f0fdf4;
+  background: linear-gradient(
+      135deg,
+      rgba(22, 163, 74, 0.32),
+      rgba(13, 148, 136, 0.28)
+    ),
+    rgba(6, 44, 36, 0.65);
+  border: 1px solid rgba(34, 197, 94, 0.65);
+  text-shadow: 0 0 12px rgba(34, 197, 94, 0.45);
+}
+
+.board-progress-note .note-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.25);
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.board-progress-note .note-text {
+  flex: 1;
+  text-align: center;
+}
+
+@keyframes actionReadyPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.38), 0 28px 58px rgba(34, 197, 94, 0.26);
+  }
+  50% {
+    box-shadow: 0 0 26px rgba(34, 197, 94, 0.55), 0 32px 72px rgba(34, 197, 94, 0.35);
+  }
+}
+
+.action-ready {
+  border-color: rgba(34, 197, 94, 0.75) !important;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.35), 0 32px 68px rgba(34, 197, 94, 0.28) !important;
+  animation: actionReadyPulse 1.9s ease-in-out infinite;
+}
+
+.action-ready:disabled,
+.action-ready[aria-disabled='true'] {
+  animation: none;
+  box-shadow: none !important;
+}
+
 .board-status-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -2215,6 +2276,17 @@ button.ghost:disabled {
   border: 1px solid rgba(16, 185, 129, 0.38);
 }
 
+.theme-matrix .board-progress-note.board-progress-note-alert {
+  background: linear-gradient(
+      135deg,
+      rgba(6, 95, 70, 0.5),
+      rgba(12, 74, 110, 0.38)
+    ),
+    rgba(2, 18, 14, 0.85);
+  border-color: rgba(45, 212, 191, 0.6);
+  color: #ecfdf5;
+}
+
 .theme-matrix .tiles-grid.active {
   outline: 2px solid rgba(45, 212, 191, 0.6);
   box-shadow: 0 0 34px rgba(16, 185, 129, 0.28);
@@ -2308,6 +2380,18 @@ button.ghost:disabled {
 .theme-classic .status-chip.hint-on {
   border-color: rgba(212, 175, 55, 0.5);
   background: rgba(76, 58, 20, 0.45);
+}
+
+.theme-classic .board-progress-note.board-progress-note-alert {
+  background: linear-gradient(
+      135deg,
+      rgba(139, 94, 60, 0.55),
+      rgba(76, 120, 88, 0.45)
+    ),
+    rgba(26, 24, 18, 0.9);
+  border-color: rgba(212, 175, 55, 0.55);
+  color: #fff8e1;
+  text-shadow: 0 0 12px rgba(212, 175, 55, 0.35);
 }
 
 .theme-classic button.primary,
