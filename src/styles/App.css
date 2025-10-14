@@ -1196,14 +1196,21 @@ button.ghost:disabled {
 }
 
 .die {
+  --die-size: 8.25rem;
+  --die-padding: 1.8rem;
+  --die-gap: 0.7rem;
+  --pip-size: min(
+    1.25rem,
+    calc((var(--die-size) - (2 * var(--die-padding)) - (2 * var(--die-gap))) / 3)
+  );
   position: relative;
   display: inline-grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  gap: 0.7rem;
-  padding: 1.8rem;
-  width: 8.25rem;
-  height: 8.25rem;
+  gap: var(--die-gap);
+  padding: var(--die-padding);
+  width: var(--die-size);
+  height: var(--die-size);
   border-radius: 1.9rem;
   background: radial-gradient(circle at 50% 28%, rgba(228, 242, 255, 0.35), rgba(15, 23, 42, 0.92));
   border: 1px solid rgba(228, 242, 255, 0.62);
@@ -1221,8 +1228,8 @@ button.ghost:disabled {
 }
 
 .pip {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: var(--pip-size);
+  height: var(--pip-size);
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(226, 232, 240, 0.7));
   box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.15), 0 2px 6px rgba(15, 23, 42, 0.35);
@@ -2789,10 +2796,9 @@ button.ghost:disabled {
   }
 
   .die {
-    width: 4.9rem;
-    height: 4.9rem;
-    padding: 0.95rem;
-    gap: 0.45rem;
+    --die-size: 4.9rem;
+    --die-padding: 0.95rem;
+    --die-gap: 0.45rem;
   }
 
   .board .panel-body {
@@ -2883,5 +2889,24 @@ button.ghost:disabled {
 
   .combo-sidebar .combos-clear {
     width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .dice-zone {
+    width: min(280px, 100%);
+    padding: 0.95rem 0.9rem 1.05rem;
+    gap: 0.65rem;
+  }
+
+  .dice-values {
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+  }
+
+  .die {
+    --die-size: 4.4rem;
+    --die-padding: 0.78rem;
+    --die-gap: 0.34rem;
   }
 }
