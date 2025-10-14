@@ -19,6 +19,7 @@ This launches Vite's development server (default port `5173`). Open the printed 
 - Scoring modes: lowest single-round remainder, cumulative race to a target, or instant win on a shut box.
 - Automatic detection of legal tile combinations for each roll, including highlights and optional "best move" hints.
 - History log of every turn and instant win shout-outs.
+- Mobile board layout that keeps essential controls visible without scrolling.
 
 ## Project structure
 
