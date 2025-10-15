@@ -2664,6 +2664,52 @@ button.ghost:disabled {
   .mobile-status-panel {
     margin-top: 0.35rem;
   }
+
+  .app-shell.mobile-menu-closed {
+    gap: 0.45rem;
+  }
+
+  .app-shell.mobile-menu-open {
+    gap: 1.4rem;
+  }
+
+  .app-shell.mobile-menu-closed .app-header {
+    gap: 0.25rem;
+    padding-top: 0.6rem;
+    padding-bottom: 0.14rem;
+  }
+
+  .app-shell.mobile-menu-open .app-header {
+    gap: 1.05rem;
+    padding-bottom: 1.4rem;
+  }
+
+  .app-shell.mobile-menu-closed .header-toolbar {
+    padding-top: 0.05rem;
+    padding-bottom: 0;
+  }
+
+  .app-shell.mobile-menu-closed .status-block {
+    gap: 0.28rem;
+  }
+
+  .app-shell.mobile-menu-closed .progress-stack {
+    gap: 0.12rem;
+    flex: 0 0 auto;
+    align-items: center;
+  }
+
+  .app-shell.mobile-menu-closed .mobile-header-toggle {
+    margin-bottom: 0;
+  }
+
+  .app-shell.mobile-menu-closed .board .panel-body {
+    padding-top: 0.34rem;
+  }
+
+  .app-shell.mobile-menu-open .board .panel-body {
+    padding-top: 1.3rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -2745,6 +2791,52 @@ button.ghost:disabled {
 
   .status-block {
     gap: 0.6rem;
+  }
+
+  .app-shell.mobile-menu-closed {
+    gap: 0.35rem;
+  }
+
+  .app-shell.mobile-menu-open {
+    gap: 1rem;
+  }
+
+  .app-shell.mobile-menu-closed .app-header {
+    gap: 0.22rem;
+    padding-top: 0.48rem;
+    padding-bottom: 0.1rem;
+  }
+
+  .app-shell.mobile-menu-open .app-header {
+    gap: 0.95rem;
+    padding-bottom: 1.2rem;
+  }
+
+  .app-shell.mobile-menu-closed .header-toolbar {
+    padding-top: 0.02rem;
+    padding-bottom: 0;
+  }
+
+  .app-shell.mobile-menu-closed .status-block {
+    gap: 0.22rem;
+  }
+
+  .app-shell.mobile-menu-closed .progress-stack {
+    gap: 0.1rem;
+    flex: 0 0 auto;
+    align-items: center;
+  }
+
+  .app-shell.mobile-menu-closed .mobile-header-toggle {
+    margin-bottom: 0;
+  }
+
+  .app-shell.mobile-menu-closed .board .panel-body {
+    padding-top: 0.24rem;
+  }
+
+  .app-shell.mobile-menu-open .board .panel-body {
+    padding-top: 1.1rem;
   }
 
   .status-tray {

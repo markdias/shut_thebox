@@ -243,9 +243,28 @@ function App() {
     }, 0);
   }, [phase, players, previousWinnerIds, round, unfinishedCounts, theme]);
 
+  const shellClassName = useMemo(() => {
+    const classes = ['app-shell', `theme-${theme}`];
+    if (isMobileViewport) {
+      classes.push(mobileMenuOpen ? 'mobile-menu-open' : 'mobile-menu-closed');
+    }
+    return classes.join(' ');
+  }, [theme, isMobileViewport, mobileMenuOpen]);
+
+  const headerClassName = useMemo(() => {
+    const classes = ['app-header'];
+    if (headerCollapsed) {
+      classes.push('headline-collapsed');
+    }
+    if (isMobileViewport) {
+      classes.push(mobileMenuOpen ? 'mobile-menu-open' : 'mobile-menu-closed');
+    }
+    return classes.join(' ');
+  }, [headerCollapsed, isMobileViewport, mobileMenuOpen]);
+
   return (
-    <div className={`app-shell theme-${theme}`}>
-      <header className={`app-header ${headerCollapsed ? 'headline-collapsed' : ''}`}>
+    <div className={shellClassName}>
+      <header className={headerClassName}>
         <div className="header-glow" aria-hidden="true" />
         <div className={`header-main ${headerCollapsed ? 'collapsed' : ''}`}>
           <div className="header-title-group">
