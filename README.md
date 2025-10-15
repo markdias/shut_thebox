@@ -18,6 +18,7 @@ This launches Vite's development server (default port `5173`). Open the printed 
 - Configurable one-die rule (after high tiles, when total &lt; 6, or never).
 - Scoring modes: lowest single-round remainder, cumulative race to a target, or instant win on a shut box.
 - Automatic detection of legal tile combinations for each roll, including highlights and optional "best move" hints.
+- Optional move-confirmation toggle so you can require approval before tiles close.
 - History log of every turn and instant win shout-outs.
 - Mobile board layout that keeps essential controls visible without scrolling.
 

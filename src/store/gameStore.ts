@@ -71,7 +71,8 @@ const defaultOptions: GameOptions = {
   cheatFullWin: false,
   cheatAutoPlay: false,
   showHeaderDetails: false,
-  showCodeTools: false
+  showCodeTools: false,
+  requireMoveConfirmation: false
 };
 
 const storedSnapshot = loadScoresSnapshot();

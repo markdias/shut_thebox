@@ -123,6 +123,14 @@ function SettingsPanel() {
         <label className="field checkbox">
           <input
             type="checkbox"
+            checked={Boolean(options.requireMoveConfirmation)}
+            onChange={(event) => setOption('requireMoveConfirmation', event.target.checked)}
+          />
+          <span className="checkbox-label">Require confirmation before closing tiles</span>
+        </label>
+        <label className="field checkbox">
+          <input
+            type="checkbox"
             checked={Boolean(options.autoRetryOnFail)}
             onChange={(e) => setOption('autoRetryOnFail', e.target.checked)}
           />

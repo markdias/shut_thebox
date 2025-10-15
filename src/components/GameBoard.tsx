@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import { useMemo, useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { createInitialTiles } from '../utils/gameLogic';
 
@@ -52,6 +53,38 @@ function GameBoard() {
   const acknowledgeNextTurn = useGameStore((state) => state.acknowledgeNextTurn);
   const startGame = useGameStore((state) => state.startGame);
 
+  const [isMobileLayout, setIsMobileLayout] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return false;
+    }
+    return window.matchMedia('(max-width: 720px)').matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
+    }
+
+    const query = window.matchMedia('(max-width: 720px)');
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsMobileLayout(event.matches);
+    };
+
+    setIsMobileLayout(query.matches);
+
+    if (typeof query.addEventListener === 'function') {
+      query.addEventListener('change', handleChange);
+      return () => {
+        query.removeEventListener('change', handleChange);
+      };
+    }
+
+    query.addListener(handleChange);
+    return () => {
+      query.removeListener(handleChange);
+    };
+  }, []);
+
   const allTiles = useMemo(
     () => createInitialTiles(options.maxTile),
     [options.maxTile]
@@ -76,6 +109,7 @@ function GameBoard() {
 
   const canRoll = phase === 'inProgress' && !!turn && !turn.rolled && !waitingForNext;
   const canConfirm = !!turn && turn.rolled && legalSelection;
+  const requireConfirmation = Boolean(options.requireMoveConfirmation);
 
   const highlightTiles = new Set<number>();
   const bestTiles = new Set<number>();
@@ -179,6 +213,31 @@ function GameBoard() {
     (phase === 'inProgress' && !waitingForNext && (!turn || !turn.rolled)) || canStartRound;
   const tilesActive = !!turn && turn.rolled && !waitingForNext;
   const confirmReady = canConfirm && !waitingForNext;
+
+  const desktopColumns = options.maxTile >= 12 ? 12 : options.maxTile;
+  const tileColumns = Math.max(
+    1,
+    isMobileLayout ? Math.min(6, options.maxTile) : desktopColumns
+  );
+  const tileGridStyle: CSSProperties = {
+    gridTemplateColumns: `repeat(${tileColumns}, minmax(48px, 1fr))`
+  };
+
+  useEffect(() => {
+    if (requireConfirmation) {
+      return;
+    }
+    if (!turn || !turn.rolled) {
+      return;
+    }
+    if (!canConfirm || waitingForNext) {
+      return;
+    }
+    if (options.cheatAutoPlay) {
+      return;
+    }
+    confirmMove();
+  }, [requireConfirmation, canConfirm, waitingForNext, confirmMove, turn, options.cheatAutoPlay]);
 
   const handleDiceClick = () => {
     if (canStartRound) {
@@ -311,14 +370,16 @@ function GameBoard() {
             ) : (
               <p className="muted">Roll to reveal combos.</p>
             )}
-            <button
-              type="button"
-              className="secondary combos-clear"
-              onClick={resetSelection}
-              disabled={!hasSelection || waitingForNext}
-            >
-              Clear selection
-            </button>
+            {requireConfirmation && (
+              <button
+                type="button"
+                className="secondary combos-clear"
+                onClick={resetSelection}
+                disabled={!hasSelection || waitingForNext}
+              >
+                Clear selection
+              </button>
+            )}
           </aside>
         )}
         </div>
@@ -393,6 +454,7 @@ function GameBoard() {
           className={classNames('tiles-grid', {
             active: tilesActive
           })}
+          style={tileGridStyle}
         >
           {allTiles.map((tile) => {
             const open = tilesOpen.includes(tile);
@@ -415,28 +477,30 @@ function GameBoard() {
           <div className="no-moves">No valid moves. Your turn ends.</div>
         )}
 
-        <div className="board-controls">
-          <button
-            type="button"
-            className={classNames('confirm-prompt', {
-              'action-ready': confirmReady
-            })}
-            onClick={confirmMove}
-            disabled={!canConfirm || waitingForNext}
-          >
-            Confirm move
-          </button>
-          {!hintsActive && (
+        {requireConfirmation && (
+          <div className="board-controls">
             <button
               type="button"
-              className="secondary clear-inline"
-              onClick={resetSelection}
-              disabled={!hasSelection || waitingForNext}
+              className={classNames('confirm-prompt', {
+                'action-ready': confirmReady
+              })}
+              onClick={confirmMove}
+              disabled={!canConfirm || waitingForNext}
             >
-              Clear selection
+              Confirm move
             </button>
-          )}
-        </div>
+            {!hintsActive && (
+              <button
+                type="button"
+                className="secondary clear-inline"
+                onClick={resetSelection}
+                disabled={!hasSelection || waitingForNext}
+              >
+                Clear selection
+              </button>
+            )}
+          </div>
+        )}
 
       </div>
     </section>

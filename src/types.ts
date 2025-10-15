@@ -14,6 +14,7 @@ export interface GameOptions {
   autoRetryOnFail?: boolean;
   showHeaderDetails?: boolean;
   showCodeTools?: boolean;
+  requireMoveConfirmation?: boolean;
 }
 
 export interface Player {
