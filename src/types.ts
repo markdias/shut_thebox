@@ -1,6 +1,6 @@
 export type OneDieRule = 'after789' | 'totalUnder6' | 'never';
 export type ScoringMode = 'lowest' | 'target' | 'instant';
-export type ThemeName = 'neon' | 'matrix' | 'classic';
+export type ThemeName = 'neon' | 'matrix' | 'classic' | 'tabletop';
 
 export interface GameOptions {
   maxTile: number;
