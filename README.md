@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-This launches Vite's development server (default port `5173`). Open the printed URL in your browser to start playing locally.
+This launches Vite's development server (default port `5173`). Open the printed URL in your browser to start playing locally. Click the glowing dice tray to kick off the first round or to begin each subsequent round.
 
 ## Game features
 

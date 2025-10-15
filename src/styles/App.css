@@ -1162,6 +1162,13 @@ button.ghost:disabled {
   box-shadow: 0 46px 88px rgba(34, 197, 94, 0.34);
 }
 
+.dice-zone.start-ready {
+  border-color: rgba(59, 130, 246, 0.65);
+  box-shadow: 0 46px 92px rgba(59, 130, 246, 0.28);
+  background: radial-gradient(circle at 50% 0%, rgba(191, 219, 254, 0.2), transparent 72%),
+    rgba(30, 41, 59, 0.85);
+}
+
 .dice-zone.ready:hover {
   transform: translateY(-3px);
 }
@@ -1177,10 +1184,25 @@ button.ghost:disabled {
 }
 
 .dice-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
   font-size: 0.82rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: rgba(226, 232, 240, 0.72);
+}
+
+.dice-label-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.24rem 0.65rem 0.18rem;
+  border-radius: 999px;
+  border: 1px solid rgba(147, 197, 253, 0.45);
+  background: rgba(59, 130, 246, 0.18);
+  color: rgba(191, 219, 254, 0.92);
+  font-size: 0.64rem;
+  letter-spacing: 0.18em;
 }
 
 .dice-values {
@@ -2254,6 +2276,13 @@ button.ghost:disabled {
   box-shadow: 0 48px 94px rgba(20, 184, 166, 0.32);
 }
 
+.theme-matrix .dice-zone.start-ready {
+  border-color: rgba(94, 234, 212, 0.7);
+  box-shadow: 0 48px 96px rgba(45, 212, 191, 0.28);
+  background: radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.24), transparent 72%),
+    rgba(2, 24, 16, 0.88);
+}
+
 .theme-matrix .combo-sidebar {
   background: rgba(2, 22, 17, 0.82);
   border: 1px solid rgba(16, 185, 129, 0.28);
@@ -2437,6 +2466,13 @@ button.ghost:disabled {
 .theme-classic .dice-zone.active {
   border-color: rgba(61, 139, 68, 0.65);
   box-shadow: 0 48px 94px rgba(30, 119, 68, 0.32);
+}
+
+.theme-classic .dice-zone.start-ready {
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 48px 96px rgba(217, 119, 6, 0.22);
+  background: radial-gradient(circle at 50% 0%, rgba(217, 119, 6, 0.18), transparent 72%),
+    rgba(26, 35, 21, 0.9);
 }
 
 .theme-classic .combo-sidebar {
