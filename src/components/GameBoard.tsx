@@ -47,10 +47,10 @@ function GameBoard() {
   const resetSelection = useGameStore((state) => state.resetSelection);
   const bestMove = useGameStore((state) => state.bestMove);
   const globalHints = useGameStore((state) => state.showHints);
-  const startGame = useGameStore((state) => state.startGame);
   const pendingTurn = useGameStore((state) => state.pendingTurn);
   const waitingForNext = useGameStore((state) => state.waitingForNext);
   const acknowledgeNextTurn = useGameStore((state) => state.acknowledgeNextTurn);
+  const startGame = useGameStore((state) => state.startGame);
 
   const allTiles = useMemo(
     () => createInitialTiles(options.maxTile),
@@ -90,8 +90,6 @@ function GameBoard() {
     bestMove.forEach((value) => bestTiles.add(value));
   }
 
-  const startLabel = phase === 'setup' ? 'Start Game' : 'Start New Round';
-  const startDisabled = phase === 'inProgress';
   const canRollOneDieOption = !!turn && turn.canRollOneDie;
   const oneDieAvailable = canRoll && canRollOneDieOption;
   const totalTiles = allTiles.length;
@@ -162,20 +160,32 @@ function GameBoard() {
   const indicatorName = waitingForNext && pendingPlayerName ? pendingPlayerName : activePlayerName;
   const indicatorLabel = waitingForNext ? 'Next up' : 'Now playing';
   const indicatorFlash = turnHighlight || waitingForNext;
-  const diceHintText = waitingForNext
-    ? 'Awaiting next player confirmation'
-    : canRoll
-      ? hasActiveDice
-        ? 'Tap to roll again'
-        : 'Tap or press Enter to roll two dice'
-      : 'Waiting for current turn';
+  const canStartRound = (phase === 'setup' || phase === 'finished') && !waitingForNext;
+  const diceHintText = (() => {
+    if (waitingForNext) {
+      return 'Awaiting next player confirmation';
+    }
+    if (canStartRound) {
+      return phase === 'setup'
+        ? 'Tap the dice to start the game'
+        : 'Tap the dice to start the next round';
+    }
+    if (canRoll) {
+      return hasActiveDice ? 'Tap to roll again' : 'Tap or press Enter to roll two dice';
+    }
+    return 'Waiting for current turn';
+  })();
 
-  const diceActive = phase === 'inProgress' && !waitingForNext && (!turn || !turn.rolled);
+  const diceActive =
+    (phase === 'inProgress' && !waitingForNext && (!turn || !turn.rolled)) || canStartRound;
   const tilesActive = !!turn && turn.rolled && !waitingForNext;
   const confirmReady = canConfirm && !waitingForNext;
-  const startReady = !startDisabled;
 
   const handleDiceClick = () => {
+    if (canStartRound) {
+      startGame();
+      return;
+    }
     if (!canRoll) {
       return;
     }
@@ -191,23 +201,6 @@ function GameBoard() {
 
   return (
     <section className="panel board">
-      <header className="panel-header">
-        <div className="board-header-left">
-          <div className="start-round-action">
-            <button
-              type="button"
-              className={classNames('start-round-button', {
-                'action-ready': startReady
-              })}
-              onClick={startGame}
-              disabled={startDisabled}
-            >
-              {startLabel}
-            </button>
-          </div>
-        </div>
-      </header>
-
       <div className="panel-body">
         <div className="dice-section">
           <aside
@@ -237,24 +230,34 @@ function GameBoard() {
           </aside>
           <div
             className={classNames('dice-zone', {
-              ready: canRoll,
+              ready: canRoll || canStartRound,
               rolling: diceRolling,
-              active: diceActive
+              active: diceActive,
+              'start-ready': canStartRound
             })}
             role="button"
-            tabIndex={canRoll ? 0 : -1}
-            aria-disabled={!canRoll}
-            aria-label={canRoll ? 'Roll two dice' : 'Dice roll unavailable'}
+            tabIndex={canRoll || canStartRound ? 0 : -1}
+            aria-disabled={!(canRoll || canStartRound)}
+            aria-label={
+              canStartRound
+                ? 'Start the round by rolling the dice'
+                : canRoll
+                  ? 'Roll two dice'
+                  : 'Dice roll unavailable'
+            }
             onClick={handleDiceClick}
             onKeyDown={(event) => {
-              if (!canRoll) return;
+              if (!(canRoll || canStartRound)) return;
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
                 handleDiceClick();
               }
             }}
           >
-            <span className="dice-label">Current roll</span>
+            <span className="dice-label">
+              {canStartRound ? 'Ready to start' : 'Current roll'}
+              {canStartRound ? <span className="dice-label-pill">Tap to begin</span> : null}
+            </span>
             <div className={classNames('dice-values', { rolling: diceRolling })}>
               {diceRender.map((value, index) => (
                 <span
