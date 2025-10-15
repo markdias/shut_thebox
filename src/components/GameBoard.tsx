@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { useMemo, useEffect, useRef, useState } from 'react';
-import type { CSSProperties } from 'react';
+import type { CSSProperties, MouseEvent } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { createInitialTiles } from '../utils/gameLogic';
 
@@ -10,7 +10,8 @@ function TileButton({
   selected,
   highlight,
   best,
-  onClick
+  onClick,
+  onDoubleClick
 }: {
   value: number;
   open: boolean;
@@ -18,6 +19,7 @@ function TileButton({
   highlight: boolean;
   best: boolean;
   onClick: () => void;
+  onDoubleClick?: (event: MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
     <button
@@ -29,6 +31,7 @@ function TileButton({
         best
       })}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       disabled={!open}
     >
       {value}
@@ -52,6 +55,9 @@ function GameBoard() {
   const waitingForNext = useGameStore((state) => state.waitingForNext);
   const acknowledgeNextTurn = useGameStore((state) => state.acknowledgeNextTurn);
   const startGame = useGameStore((state) => state.startGame);
+  const triggerSecretDoubleTwelve = useGameStore(
+    (state) => state.triggerSecretDoubleTwelve
+  );
 
   const [isMobileLayout, setIsMobileLayout] = useState(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -468,6 +474,15 @@ function GameBoard() {
                 highlight={highlightTiles.has(tile) && turn?.rolled === true}
                 best={bestTiles.has(tile)}
                 onClick={() => selectTile(tile)}
+                onDoubleClick={
+                  tile === 12 && !isMobileLayout
+                    ? (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        triggerSecretDoubleTwelve();
+                      }
+                    : undefined
+                }
               />
             );
           })}

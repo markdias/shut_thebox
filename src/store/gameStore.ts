@@ -30,6 +30,7 @@ interface GameStore {
   pendingTiles: number[] | null;
   waitingForNext: boolean;
   restartCountdown: number | null;
+  nextForcedRoll: { total: number; diceCount: number } | null;
   setOption: <K extends keyof GameOptions>(key: K, value: GameOptions[K]) => void;
   addPlayer: () => void;
   removePlayer: (id: string) => void;
@@ -47,6 +48,7 @@ interface GameStore {
   endTurn: () => void;
   resetGame: () => void;
   clearHistory: () => void;
+  triggerSecretDoubleTwelve: () => void;
 }
 
 function createDefaultPlayers(): Player[] {
@@ -152,6 +154,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     pendingTiles: null,
     waitingForNext: false,
     restartCountdown: null,
+    nextForcedRoll: null,
     setOption: (key, value) => {
       set((state) => {
         const nextOptions = {
@@ -261,6 +264,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       }
     },
     clearHistory: () => set({ logs: [] }),
+    triggerSecretDoubleTwelve: () => set({ nextForcedRoll: { total: 12, diceCount: 2 } }),
     startGame: () => {
       if (restartTimer) {
         window.clearInterval(restartTimer);
@@ -321,7 +325,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
     rollDice: (diceCount) => {
       const state = get();
-      const { turn, tilesOpen, options } = state;
+      const { turn, tilesOpen, options, nextForcedRoll } = state;
       if (!turn || turn.finished) {
         return;
       }
@@ -345,7 +349,18 @@ export const useGameStore = create<GameStore>((set, get) => {
       let combos: number[][] = [];
       let rollTotal = 0;
 
-      if (options.cheatFullWin) {
+      const forcedRoll = nextForcedRoll;
+      const shouldForceSecret =
+        Boolean(forcedRoll) && (diceCount === undefined || diceCount !== 1);
+      if (shouldForceSecret && forcedRoll) {
+        diceToRoll = forcedRoll.diceCount;
+        rollTotal = forcedRoll.total;
+        dice = pickDiceForTotal(rollTotal, diceToRoll);
+        combos = generateTileCombos(tilesOpen, rollTotal);
+        set({ nextForcedRoll: null });
+      }
+
+      if (!shouldForceSecret && options.cheatFullWin) {
         const candidates: Array<{ total: number; diceNum: number; combos: number[][]; remainder: number }>=[];
         const tryDiceNums = canRollOneDie ? [1, 2] : [2];
         for (const dn of tryDiceNums) {
