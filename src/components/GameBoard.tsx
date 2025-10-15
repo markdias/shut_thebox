@@ -161,17 +161,16 @@ function GameBoard() {
   const indicatorLabel = waitingForNext ? 'Next up' : 'Now playing';
   const indicatorFlash = turnHighlight || waitingForNext;
   const canStartRound = (phase === 'setup' || phase === 'finished') && !waitingForNext;
+  const startPrompt = phase === 'setup' ? 'Start game' : 'Start new round';
   const diceHintText = (() => {
     if (waitingForNext) {
       return 'Awaiting next player confirmation';
     }
     if (canStartRound) {
-      return phase === 'setup'
-        ? 'Tap the dice to start the game'
-        : 'Tap the dice to start the next round';
+      return phase === 'setup' ? 'Roll to begin the game' : 'Roll to begin the next round';
     }
     if (canRoll) {
-      return hasActiveDice ? 'Tap to roll again' : 'Tap or press Enter to roll two dice';
+      return hasActiveDice ? 'Roll again' : 'Roll two dice';
     }
     return 'Waiting for current turn';
   })();
@@ -184,6 +183,7 @@ function GameBoard() {
   const handleDiceClick = () => {
     if (canStartRound) {
       startGame();
+      rollDice(2);
       return;
     }
     if (!canRoll) {
@@ -240,7 +240,7 @@ function GameBoard() {
             aria-disabled={!(canRoll || canStartRound)}
             aria-label={
               canStartRound
-                ? 'Start the round by rolling the dice'
+                ? `${startPrompt} by rolling the dice`
                 : canRoll
                   ? 'Roll two dice'
                   : 'Dice roll unavailable'
@@ -255,8 +255,7 @@ function GameBoard() {
             }}
           >
             <span className="dice-label">
-              {canStartRound ? 'Ready to start' : 'Current roll'}
-              {canStartRound ? <span className="dice-label-pill">Tap to begin</span> : null}
+              {canStartRound ? startPrompt : 'Current roll'}
             </span>
             <div className={classNames('dice-values', { rolling: diceRolling })}>
               {diceRender.map((value, index) => (
