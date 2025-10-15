@@ -21,6 +21,7 @@ This launches Vite's development server (default port `5173`). Open the printed 
 - Optional move-confirmation toggle so you can require approval before tiles close.
 - History log of every turn and instant win shout-outs.
 - Mobile board layout that keeps essential controls visible without scrolling.
+- Mobile header menu that collapses into a snug frame hugging the menu toggle so the dice line up as tightly as the Start Game button row, then expands again to push the board back down when reopened.
 
 ## Project structure
 
