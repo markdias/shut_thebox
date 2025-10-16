@@ -15,6 +15,7 @@ export interface GameOptions {
   showHeaderDetails?: boolean;
   showCodeTools?: boolean;
   requireMoveConfirmation?: boolean;
+  showLearningGames?: boolean;
 }
 
 export interface Player {

@@ -1,15 +1,20 @@
 import { useGameStore } from '../store/gameStore';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { GameOptions } from '../types';
 import DropdownSelect from './ui/DropdownSelect';
+import ShapesGame from './LearningGames/ShapesGame';
+import DiceDotsGame from './LearningGames/DiceDotsGame';
 
 const tileOptions: GameOptions['maxTile'][] = [9, 10, 12];
+
+type LearningGameId = 'shapes' | 'dice';
 
 function SettingsPanel() {
   const options = useGameStore((state) => state.options);
   const setOption = useGameStore((state) => state.setOption);
   const startGame = useGameStore((state) => state.startGame);
   const [code, setCode] = useState('');
+  const [selectedGame, setSelectedGame] = useState<LearningGameId | null>(null);
   const appVersion = import.meta.env.VITE_APP_VERSION ?? __APP_VERSION__ ?? 'dev';
   const rawUpdated = import.meta.env.VITE_LAST_UPDATED ?? (typeof __LAST_UPDATED__ !== 'undefined' ? __LAST_UPDATED__ : undefined);
   const lastUpdated = (() => {
@@ -17,6 +22,28 @@ function SettingsPanel() {
     const d = new Date(String(rawUpdated));
     return isNaN(d.getTime()) ? null : d.toLocaleString();
   })();
+
+  const learningGames = useMemo(
+    () => [
+      {
+        id: 'shapes' as LearningGameId,
+        title: 'Shape explorer',
+        description: 'Guess how many corners and sides each shape has.'
+      },
+      {
+        id: 'dice' as LearningGameId,
+        title: 'Dice dot detective',
+        description: 'Predict the total number of dots on six dice.'
+      }
+    ],
+    []
+  );
+
+  useEffect(() => {
+    if (!options.showLearningGames) {
+      setSelectedGame(null);
+    }
+  }, [options.showLearningGames]);
 
   return (
     <section className="panel">
@@ -162,6 +189,10 @@ function SettingsPanel() {
                 className="secondary"
                 onClick={() => {
                   const value = code.trim().toLowerCase();
+                  if (value !== 'learn') {
+                    setOption('showLearningGames', false);
+                    setSelectedGame(null);
+                  }
                   if (value === 'full') {
                     setOption('cheatFullWin', true);
                   } else if (value === 'madness') {
@@ -173,11 +204,15 @@ function SettingsPanel() {
                     setOption('autoRetryOnFail', true);
                     // Immediately start (or restart) a game so it runs hands-free
                     startGame();
+                  } else if (value === 'learn') {
+                    setOption('showLearningGames', true);
+                    setSelectedGame('shapes');
                   } else {
                     setOption('cheatFullWin', false);
                     setOption('cheatAutoPlay', false);
                     setOption('autoRetryOnFail', false);
                   }
+                  setCode('');
                 }}
               >
                 Apply
@@ -185,6 +220,36 @@ function SettingsPanel() {
             </div>
             <small className="muted">Enter special codes to modify gameplay.</small>
           </label>
+        )}
+        {options.showLearningGames && (
+          <div className="learning-games-panel">
+            <header className="learning-games-header">
+              <h3>Learning games</h3>
+              <p>Pick an activity to explore together. Use the Apply button with a different code to hide this section.</p>
+            </header>
+            <div className="learning-games-selector">
+              {learningGames.map((game) => (
+                <button
+                  key={game.id}
+                  type="button"
+                  className={`ghost learning-game-button ${selectedGame === game.id ? 'active' : ''}`}
+                  onClick={() => setSelectedGame(game.id)}
+                >
+                  <strong>{game.title}</strong>
+                  <span>{game.description}</span>
+                </button>
+              ))}
+            </div>
+            <div className="learning-games-body">
+              {selectedGame === 'shapes' && <ShapesGame />}
+              {selectedGame === 'dice' && <DiceDotsGame />}
+              {!selectedGame && (
+                <p className="muted">
+                  Choose a learning game above to get started. The activities are designed for quick, screen-friendly play.
+                </p>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </section>
