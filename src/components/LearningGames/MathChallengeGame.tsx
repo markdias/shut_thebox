@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type Operation = 'add' | 'subtract' | 'multiply' | 'divide';
-type Difficulty = 'explorer' | 'challenger' | 'master';
+type Difficulty = 'starter' | 'explorer' | 'challenger' | 'master';
 
 interface MathChallenge {
   left: number;
@@ -33,6 +33,12 @@ interface DifficultyConfig {
 }
 
 const DIFFICULTY_CONFIG: Record<Difficulty, DifficultyConfig> = {
+  starter: {
+    add: { left: { min: 0, max: 10 }, right: { min: 0, max: 10 } },
+    subtract: { left: { min: 1, max: 10 }, right: { min: 0, max: 10 } },
+    multiply: { left: { min: 1, max: 5 }, right: { min: 1, max: 5 } },
+    divide: { divisor: { min: 1, max: 5 }, quotient: { min: 1, max: 5 } }
+  },
   explorer: {
     add: { left: { min: 1, max: 12 }, right: { min: 1, max: 12 } },
     subtract: { left: { min: 6, max: 20 }, right: { min: 1, max: 10 } },
@@ -57,6 +63,10 @@ const DIFFICULTY_DETAILS: Record<
   Difficulty,
   { label: string; description: string }
 > = {
+  starter: {
+    label: 'Starter',
+    description: 'Gentle sums within 10—perfect for brand-new mathematicians.'
+  },
   explorer: {
     label: 'Explorer',
     description: 'Friendly facts: numbers up to about 20 and times tables to 6.'
@@ -78,7 +88,7 @@ const OPERATION_DETAILS: Record<Operation, { label: string; helper: string }> = 
   divide: { label: 'Division', helper: 'Split into equal groups.' }
 };
 
-const DIFFICULTY_ORDER: Difficulty[] = ['explorer', 'challenger', 'master'];
+const DIFFICULTY_ORDER: Difficulty[] = ['starter', 'explorer', 'challenger', 'master'];
 
 const randomInRange = ({ min, max }: Range) => Math.floor(Math.random() * (max - min + 1)) + min;
 
@@ -129,7 +139,7 @@ const describeOperation = (operation: Operation) => {
 
 const MathChallengeGame = () => {
   const [selectedOperations, setSelectedOperations] = useState<Operation[]>(DEFAULT_OPERATIONS);
-  const [difficulty, setDifficulty] = useState<Difficulty>('explorer');
+  const [difficulty, setDifficulty] = useState<Difficulty>('starter');
   const operationsForGame = useMemo(
     () => (selectedOperations.length ? selectedOperations : DEFAULT_OPERATIONS),
     [selectedOperations]
@@ -140,11 +150,9 @@ const MathChallengeGame = () => {
   const [guess, setGuess] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [status, setStatus] = useState<'neutral' | 'correct' | 'incorrect'>('neutral');
-
-  const prompt = useMemo(
-    () => `${challenge.left} ${challenge.symbol} ${challenge.right} = ?`,
-    [challenge]
-  );
+  const [answerRevealed, setAnswerRevealed] = useState(false);
+  const equationStem = `${challenge.left} ${challenge.symbol} ${challenge.right}`;
+  const prompt = `${equationStem} = ${answerRevealed ? challenge.answer : '?'}`;
 
   const operationLabel = useMemo(() => describeOperation(challenge.operation), [challenge.operation]);
 
@@ -186,11 +194,13 @@ const MathChallengeGame = () => {
       return;
     }
 
+    setAnswerRevealed(true);
+
     if (parsed === challenge.answer) {
-      setFeedback(`Great work! ${prompt.replace(' = ?', '')} = ${challenge.answer}.`);
+      setFeedback('Great work! Ready for another question?');
       setStatus('correct');
     } else {
-      setFeedback(`Almost! ${prompt.replace(' = ?', '')} equals ${challenge.answer}. Try another question.`);
+      setFeedback('Almost! The correct answer is shown above—try another question.');
       setStatus('incorrect');
     }
   };
@@ -200,6 +210,7 @@ const MathChallengeGame = () => {
     setGuess('');
     setFeedback(null);
     setStatus('neutral');
+    setAnswerRevealed(false);
   };
 
   useEffect(() => {
@@ -207,6 +218,7 @@ const MathChallengeGame = () => {
     setGuess('');
     setFeedback(null);
     setStatus('neutral');
+    setAnswerRevealed(false);
   }, [createChallenge]);
 
   const toggleOperation = (operation: Operation) => {

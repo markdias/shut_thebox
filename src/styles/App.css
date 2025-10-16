@@ -3715,6 +3715,13 @@ button.ghost:disabled {
   gap: 1rem;
 }
 
+.math-challenge .field input[type='number'] {
+  font-size: clamp(1.35rem, 2vw + 1rem, 2.4rem);
+  padding: 0.95rem 1.1rem;
+  text-align: center;
+  font-weight: 600;
+}
+
 .math-challenge-controls {
   display: grid;
   gap: 1.1rem;
