@@ -1250,6 +1250,9 @@ button.ghost:disabled {
 }
 
 .pip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: var(--pip-size);
   height: var(--pip-size);
   border-radius: 50%;
@@ -3710,6 +3713,115 @@ button.ghost:disabled {
 
 .math-challenge {
   gap: 1rem;
+}
+
+.math-challenge-controls {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.math-operation-selector {
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  padding: 0.9rem 1rem;
+  background: linear-gradient(145deg, rgba(30, 64, 175, 0.2), rgba(124, 58, 237, 0.12));
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.18);
+}
+
+.math-operation-selector legend {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(191, 219, 254, 0.78);
+  padding: 0 0.4rem;
+}
+
+.math-operation-selector p {
+  margin: 0.35rem 0 0.8rem;
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.82);
+}
+
+.math-operation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.65rem;
+}
+
+.math-operation-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 58, 138, 0.85));
+  color: rgba(226, 232, 240, 0.9);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.math-operation-toggle:hover,
+.math-operation-toggle:focus-within {
+  border-color: rgba(59, 130, 246, 0.55);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.math-operation-toggle.active {
+  border-color: rgba(96, 165, 250, 0.7);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.28), rgba(124, 58, 237, 0.24));
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  transform: translateY(-1px);
+}
+
+.math-operation-toggle input[type='checkbox'] {
+  margin-top: 0.2rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: rgb(59, 130, 246);
+}
+
+.math-operation-toggle strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.math-operation-toggle span {
+  font-size: 0.8rem;
+  color: rgba(191, 219, 254, 0.8);
+}
+
+.math-options-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(148, 163, 184, 0.88);
+}
+
+.math-difficulty-select select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(9, 14, 34, 0.85));
+  color: rgba(226, 232, 240, 0.92);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  appearance: none;
+}
+
+.math-difficulty-select select:focus-visible {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.65);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.22);
+}
+
+.field-hint {
+  margin-top: 0.45rem;
+  font-size: 0.78rem;
+  color: rgba(148, 163, 184, 0.85);
 }
 
 .math-challenge-equation {
