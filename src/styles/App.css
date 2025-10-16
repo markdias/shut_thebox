@@ -3610,7 +3610,18 @@ button.ghost:disabled {
   padding: 0.75rem 0 0.25rem;
 }
 
-.shape-canvas {
+.shape-art-button {
+  max-width: 420px;
+  margin: 0.25rem auto 0;
+  padding: 1.2rem 1.4rem 1.4rem;
+}
+
+.shape-art-button.ready:hover .shape-canvas,
+.shape-art-button.ready:focus-visible .shape-canvas {
+  box-shadow: inset 0 0 22px rgba(59, 130, 246, 0.35), 0 32px 55px rgba(2, 6, 23, 0.65);
+}
+
+.shape-art-button .shape-canvas {
   width: clamp(200px, 40vw, 260px);
   aspect-ratio: 1 / 1;
   border-radius: 1.25rem;
@@ -3623,36 +3634,26 @@ button.ghost:disabled {
   filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.45));
 }
 
+.shape-corner.interactive {
+  cursor: pointer;
+}
+
+.shape-corner.selected {
+  filter: drop-shadow(0 0 10px rgba(74, 222, 128, 0.55));
+}
+
+.shape-art-message {
+  font-size: 0.9rem;
+  color: rgba(191, 219, 254, 0.92);
+  max-width: 32ch;
+}
+
 .shape-hint {
   margin: 0;
   font-size: 0.85rem;
   color: rgba(148, 163, 184, 0.92);
   text-align: center;
   max-width: 32ch;
-}
-
-.shape-art-button {
-  border: none;
-  padding: 0;
-  background: transparent;
-  border-radius: 1.25rem;
-  display: inline-flex;
-  cursor: default;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.shape-art-button.ready {
-  cursor: pointer;
-}
-
-.shape-art-button.ready:hover .shape-canvas,
-.shape-art-button.ready:focus-visible .shape-canvas {
-  box-shadow: inset 0 0 22px rgba(59, 130, 246, 0.35), 0 32px 55px rgba(2, 6, 23, 0.65);
-}
-
-.shape-art-button:focus-visible {
-  outline: 3px solid rgba(96, 165, 250, 0.85);
-  outline-offset: 6px;
 }
 
 .learning-number-board {
@@ -3717,6 +3718,11 @@ button.ghost:disabled {
   box-shadow: inset 0 0 0 1px rgba(191, 219, 254, 0.4), 0 16px 26px rgba(15, 23, 42, 0.6);
 }
 
+.learning-number-button.selected {
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.48), rgba(96, 165, 250, 0.58));
+  box-shadow: inset 0 0 0 1px rgba(147, 197, 253, 0.6), 0 16px 26px rgba(30, 64, 175, 0.45);
+}
+
 .learning-number-button.correct {
   background: linear-gradient(145deg, rgba(34, 197, 94, 0.45), rgba(74, 222, 128, 0.55));
   box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.6), 0 18px 30px rgba(22, 101, 52, 0.45);
@@ -3731,6 +3737,8 @@ button.ghost:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
+  justify-content: center;
+  align-items: center;
 }
 
 .learning-feedback p,
@@ -3784,11 +3792,18 @@ button.ghost:disabled {
   animation-duration: 0.55s;
 }
 
+.dot-count-panel {
+  max-width: 420px;
+  margin: 0.25rem auto 0.9rem;
+  padding: 1.35rem 1.4rem 1.6rem;
+  gap: 1.1rem;
+}
+
 .dot-count-display {
   position: relative;
   width: clamp(220px, 45vw, 320px);
   aspect-ratio: 1 / 1;
-  margin: 0 auto;
+  margin: 0;
   border-radius: 1.2rem;
   background: radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.7), rgba(2, 6, 23, 0.85));
   border: 1px solid rgba(59, 130, 246, 0.3);
@@ -3800,8 +3815,33 @@ button.ghost:disabled {
   position: absolute;
   transform: translate(-50%, -50%);
   border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   background: radial-gradient(circle at 35% 35%, rgba(249, 250, 251, 0.95), rgba(148, 163, 184, 0.4));
   box-shadow: 0 6px 12px rgba(15, 23, 42, 0.45);
+  transition: transform 0.18s ease, box-shadow 0.22s ease, background 0.22s ease;
+}
+
+.dot-count-dot:hover,
+.dot-count-dot:focus-visible {
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+.dot-count-dot:focus-visible {
+  outline: 3px solid rgba(191, 219, 254, 0.9);
+  outline-offset: 2px;
+}
+
+.dot-count-dot.selected {
+  background: radial-gradient(circle at 35% 35%, rgba(240, 253, 244, 0.95), rgba(74, 222, 128, 0.45));
+  box-shadow: 0 8px 16px rgba(34, 197, 94, 0.45);
+}
+
+.dot-count-message {
+  font-size: 0.9rem;
+  max-width: 34ch;
+  color: rgba(191, 219, 254, 0.92);
 }
 
 .math-challenge {

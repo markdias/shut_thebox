@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import classNames from 'classnames';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type Point = [number, number];
 
@@ -19,6 +20,7 @@ interface ShapeInfo {
 const SHAPE_FILL = 'rgba(59, 130, 246, 0.35)';
 const SHAPE_STROKE = 'rgba(191, 219, 254, 0.9)';
 const CORNER_COLOR = 'rgba(250, 204, 21, 0.9)';
+const SELECTED_CORNER_COLOR = 'rgba(34, 197, 94, 0.92)';
 
 const REGULAR_POLYGON_SHAPES: ShapeInfo[] = [
   {
@@ -236,13 +238,21 @@ const createRegularPolygonPoints = (sides: number, radius = 56, rotationDeg = -9
 
 const formatPoints = (points: Point[]): string => points.map(([x, y]) => `${x},${y}`).join(' ');
 
-const renderShapeArt = (shape: ShapeInfo) => {
+interface ShapeRenderOptions {
+  selectedCorners?: Set<number>;
+  onCornerToggle?: (index: number) => void;
+}
+
+const renderShapeArt = (shape: ShapeInfo, options: ShapeRenderOptions = {}) => {
   const viewBox = '-70 -70 140 140';
   const commonProps = {
     stroke: SHAPE_STROKE,
     strokeWidth: 3,
     fill: SHAPE_FILL
   };
+
+  const { selectedCorners, onCornerToggle } = options;
+  const interactive = typeof onCornerToggle === 'function';
 
   if (shape.drawing.kind === 'circle') {
     const radius = shape.drawing.radius ?? 52;
@@ -272,7 +282,34 @@ const renderShapeArt = (shape: ShapeInfo) => {
       <polygon points={formatPoints(points)} {...commonProps} />
       {shape.corners > 0 &&
         points.map(([x, y], index) => (
-          <circle key={`corner-${index}`} cx={x} cy={y} r={4.5} fill={CORNER_COLOR} className="shape-corner" />
+          <circle
+            key={`corner-${index}`}
+            cx={x}
+            cy={y}
+            r={5}
+            fill={selectedCorners?.has(index) ? SELECTED_CORNER_COLOR : CORNER_COLOR}
+            className={classNames('shape-corner', {
+              selected: selectedCorners?.has(index),
+              interactive
+            })}
+            role={interactive ? 'button' : undefined}
+            tabIndex={interactive ? 0 : undefined}
+            aria-pressed={interactive ? selectedCorners?.has(index) : undefined}
+            onClick={(event) => {
+              event.stopPropagation();
+              onCornerToggle?.(index);
+            }}
+            onKeyDown={(event) => {
+              if (!interactive) {
+                return;
+              }
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.stopPropagation();
+                onCornerToggle?.(index);
+              }
+            }}
+          />
         ))}
     </svg>
   );
@@ -291,8 +328,28 @@ const ShapesGame = () => {
   const [lastGuess, setLastGuess] = useState<number | null>(null);
   const [guessStatus, setGuessStatus] = useState<'neutral' | 'correct' | 'incorrect'>('neutral');
   const [maxTile, setMaxTile] = useState(BASE_TILE_LIMIT);
+  const [selectedCorners, setSelectedCorners] = useState<Set<number>>(new Set());
 
-  const art = useMemo(() => renderShapeArt(shape), [shape]);
+  useEffect(() => {
+    setSelectedCorners(new Set());
+  }, [shape]);
+
+  const handleCornerToggle = useCallback((index: number) => {
+    setSelectedCorners((previous) => {
+      const next = new Set(previous);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  }, []);
+
+  const art = useMemo(
+    () => renderShapeArt(shape, { selectedCorners, onCornerToggle: handleCornerToggle }),
+    [handleCornerToggle, selectedCorners, shape]
+  );
   const includeZeroTile = shape.sides === 0 || shape.corners === 0 || lastGuess === 0;
   const numberTiles = useMemo(() => {
     const numbers = Array.from({ length: maxTile }, (_, index) => index + 1);
@@ -323,7 +380,7 @@ const ShapesGame = () => {
     if (canExtendTiles) {
       return `Need a bigger number? Tap "Add more numbers" to reach up to ${nextExtensionTarget}.`;
     }
-    return 'Glow-dots mark every corner. Count them before choosing a number tile.';
+    return 'Glow-dots mark every corner. Tap each one as you count before choosing a number tile.';
   }, [canExtendTiles, nextExtensionTarget, shape, stage]);
 
   const handleNumberPick = (value: number) => {
@@ -336,9 +393,7 @@ const ShapesGame = () => {
     setLastGuess(value);
 
     if (value === shape.sides) {
-      setFeedback(
-        `Great job! A ${shape.name} has ${shape.sides} sides and corners. Tap the shape to keep exploring.`
-      );
+      setFeedback('Tap the shape to keep exploring the next mystery.');
       setGuessStatus('correct');
       setStage('complete');
     } else {
@@ -380,7 +435,11 @@ const ShapesGame = () => {
         <div className="shape-display">
           <button
             type="button"
-            className={`shape-art-button${stage === 'complete' ? ' ready' : ''}`}
+            className={classNames('learning-pressable', 'shape-art-button', {
+              ready: stage === 'complete',
+              success: guessStatus === 'correct',
+              failure: guessStatus === 'incorrect'
+            })}
             onClick={handleShapeClick}
             aria-label={
               stage === 'complete'
@@ -389,6 +448,11 @@ const ShapesGame = () => {
             }
           >
             {art}
+            <span className="shape-art-message" role="status" aria-live="polite">
+              {stage === 'complete'
+                ? `Yes! A ${shape.name} has ${shape.sides} sides and ${shape.corners} corners.`
+                : 'Tap each glowing corner dot as you count, then choose the matching tile.'}
+            </span>
           </button>
           <p className="shape-hint">{hintPrompt}</p>
         </div>
