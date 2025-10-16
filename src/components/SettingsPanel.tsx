@@ -2,9 +2,6 @@ import { useGameStore } from '../store/gameStore';
 import { useState } from 'react';
 import { GameOptions } from '../types';
 import DropdownSelect from './ui/DropdownSelect';
-import ShapesGame from './LearningGames/ShapesGame';
-import DiceDotsGame from './LearningGames/DiceDotsGame';
-import { LEARNING_GAMES } from './LearningGames/learningGames';
 
 const tileOptions: GameOptions['maxTile'][] = [9, 10, 12];
 
@@ -12,8 +9,6 @@ function SettingsPanel() {
   const options = useGameStore((state) => state.options);
   const setOption = useGameStore((state) => state.setOption);
   const startGame = useGameStore((state) => state.startGame);
-  const activeLearningGame = useGameStore((state) => state.activeLearningGame);
-  const setActiveLearningGame = useGameStore((state) => state.setActiveLearningGame);
   const [code, setCode] = useState('');
   const appVersion = import.meta.env.VITE_APP_VERSION ?? __APP_VERSION__ ?? 'dev';
   const rawUpdated = import.meta.env.VITE_LAST_UPDATED ?? (typeof __LAST_UPDATED__ !== 'undefined' ? __LAST_UPDATED__ : undefined);
@@ -167,10 +162,6 @@ function SettingsPanel() {
                 className="secondary"
                 onClick={() => {
                   const value = code.trim().toLowerCase();
-                  if (value !== 'learn') {
-                    setOption('showLearningGames', false);
-                    setActiveLearningGame(null);
-                  }
                   if (value === 'full') {
                     setOption('cheatFullWin', true);
                   } else if (value === 'madness') {
@@ -182,9 +173,6 @@ function SettingsPanel() {
                     setOption('autoRetryOnFail', true);
                     // Immediately start (or restart) a game so it runs hands-free
                     startGame();
-                  } else if (value === 'learn') {
-                    setOption('showLearningGames', true);
-                    setActiveLearningGame('shapes');
                   } else {
                     setOption('cheatFullWin', false);
                     setOption('cheatAutoPlay', false);
@@ -198,36 +186,6 @@ function SettingsPanel() {
             </div>
             <small className="muted">Enter special codes to modify gameplay.</small>
           </label>
-        )}
-        {options.showLearningGames && (
-          <div className="learning-games-panel">
-            <header className="learning-games-header">
-              <h3>Learning games</h3>
-              <p>Pick an activity to explore together. Use the Apply button with a different code to hide this section.</p>
-            </header>
-            <div className="learning-games-selector">
-              {LEARNING_GAMES.map((game) => (
-                <button
-                  key={game.id}
-                  type="button"
-                  className={`ghost learning-game-button ${activeLearningGame === game.id ? 'active' : ''}`}
-                  onClick={() => setActiveLearningGame(game.id)}
-                >
-                  <strong>{game.title}</strong>
-                  <span>{game.description}</span>
-                </button>
-              ))}
-            </div>
-            <div className="learning-games-body">
-              {activeLearningGame === 'shapes' && <ShapesGame />}
-              {activeLearningGame === 'dice' && <DiceDotsGame />}
-              {!activeLearningGame && (
-                <p className="muted">
-                  Choose a learning game above to get started. The activities are designed for quick, screen-friendly play.
-                </p>
-              )}
-            </div>
-          </div>
         )}
       </div>
     </section>

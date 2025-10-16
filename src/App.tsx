@@ -28,6 +28,10 @@ function App() {
   const winnerModalTitleId = useId();
   const theme = useGameStore((state) => state.options.theme);
   const cheatAutoPlay = useGameStore((state) => Boolean(state.options.cheatAutoPlay));
+  const showLearningGames = useGameStore((state) => Boolean(state.options.showLearningGames));
+  const activeLearningGame = useGameStore((state) => state.activeLearningGame);
+  const setActiveLearningGame = useGameStore((state) => state.setActiveLearningGame);
+  const learningGamesActive = showLearningGames && Boolean(activeLearningGame);
   const restartCountdown = useGameStore((state) => state.restartCountdown);
   const setOption = useGameStore((state) => state.setOption);
   const endTurn = useGameStore((state) => state.endTurn);
@@ -163,6 +167,21 @@ function App() {
     );
   };
 
+  const handleToggleLearningGames = useCallback(() => {
+    if (learningGamesActive) {
+      setOption('showLearningGames', false);
+      return;
+    }
+
+    if (!showLearningGames) {
+      setOption('showLearningGames', true);
+    }
+
+    if (!activeLearningGame) {
+      setActiveLearningGame('shapes');
+    }
+  }, [learningGamesActive, showLearningGames, activeLearningGame, setOption, setActiveLearningGame]);
+
   const renderHeaderActions = (extraClass?: string) => {
     const actionsClass = ['header-actions', extraClass].filter(Boolean).join(' ');
     return (
@@ -178,6 +197,9 @@ function App() {
         </button>
         <button className="secondary" onClick={createMenuActionHandler(toggleHints)}>
           {showHints ? 'Hide Hints' : 'Show Hints'}
+        </button>
+        <button className="secondary" onClick={createMenuActionHandler(handleToggleLearningGames)}>
+          {learningGamesActive ? 'Back to Shut the Box' : 'More Games'}
         </button>
         <button
           type="button"
