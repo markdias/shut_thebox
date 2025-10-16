@@ -98,6 +98,14 @@ const DiceDotsGame = () => {
     }
   };
 
+  const isCorrect = revealed && guess === total;
+  const isIncorrect = revealed && guess !== total;
+  const boxMessage =
+    result ??
+    (revealed
+      ? `The ${diceLabel} landed on ${dice.join(', ')} for a total of ${total}.`
+      : 'Tap the dice box anytime for a fresh roll.');
+
   return (
     <div className="learning-card">
       <header className="learning-card-header">
@@ -105,32 +113,52 @@ const DiceDotsGame = () => {
         <p>Choose how many dice roll, then guess the total number of dots.</p>
       </header>
       <div className="learning-card-body">
-        <div
-          className={classNames('learning-dice-tray', { rolling })}
-          role="img"
+        <button
+          type="button"
+          className={classNames('learning-pressable', 'learning-dice-box', {
+            rolling,
+            ready: !rolling,
+            success: isCorrect,
+            failure: isIncorrect
+          })}
+          onClick={handleRoll}
           aria-label={
             rolling
-              ? `${diceCount} ${diceLabel} ${diceCount === 1 ? 'is' : 'are'} rolling.`
-              : `${diceCount} ${diceLabel} showing ${dice.join(', ')} for a total of ${total}`
+              ? `Rolling ${diceCount} ${diceLabel}.`
+              : `Tap to roll ${diceCount} ${diceLabel} again.`
           }
         >
-          {dice.map((value, index) => (
-            <span
-              key={`die-${index}`}
-              className={classNames('die', `die-face-${value}`, {
-                rolling
-              })}
-            >
-              {[...Array(value)].map((_, pipIndex) => (
-                <span key={pipIndex} className="pip" />
-              ))}
-            </span>
-          ))}
-        </div>
+          <span className="learning-dice-box-label">Dice box</span>
+          <div
+            className={classNames('learning-dice-tray', { rolling })}
+            role="img"
+            aria-label={
+              rolling
+                ? `${diceCount} ${diceLabel} ${diceCount === 1 ? 'is' : 'are'} rolling.`
+                : `${diceCount} ${diceLabel} showing ${dice.join(', ')} for a total of ${total}`
+            }
+          >
+            {dice.map((value, index) => (
+              <span
+                key={`die-${index}`}
+                className={classNames('die', `die-face-${value}`, {
+                  rolling
+                })}
+              >
+                {[...Array(value)].map((_, pipIndex) => (
+                  <span key={pipIndex} className="pip" />
+                ))}
+              </span>
+            ))}
+          </div>
+          <span className="learning-dice-box-message" role="status" aria-live="polite">
+            {boxMessage}
+          </span>
+        </button>
         <p className="learning-hint" aria-live="polite">
           {revealed
-            ? `The ${diceLabel} landed on ${dice.join(', ')} for a total of ${total}.`
-            : 'Count the pips you see on each die, then tap the tile that matches your total before you press check!'}
+            ? `Ready for another round? Tap the dice box to roll and try a new total.`
+            : 'Count the pips on each die, tap the tile that matches your total, then press check!'}
         </p>
         <label className="field">
           <span className="field-label">Dice in play</span>
@@ -157,16 +185,6 @@ const DiceDotsGame = () => {
           <button type="button" className="primary" onClick={handleReveal}>
             Check my guess
           </button>
-          <button type="button" className="secondary" onClick={handleRoll}>
-            Roll again
-          </button>
-        </div>
-        <div className="learning-feedback" role="status" aria-live="polite">
-          {result ? (
-            <p>{result}</p>
-          ) : (
-            <p>Tip: Add the numbers you see on the dice in your head before you check!</p>
-          )}
         </div>
       </div>
     </div>
