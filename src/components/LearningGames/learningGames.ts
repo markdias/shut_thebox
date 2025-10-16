@@ -16,5 +16,15 @@ export const LEARNING_GAMES: LearningGameDefinition[] = [
     id: 'dice',
     title: 'Dice dot detective',
     description: 'Predict the total before the dice reveal their pips.'
+  },
+  {
+    id: 'dots',
+    title: 'Secret dot flash',
+    description: 'Count the glowing dots before the pattern changes.'
+  },
+  {
+    id: 'math',
+    title: 'Math mixer',
+    description: 'Solve speedy addition, subtraction, times, or divide puzzles.'
   }
 ];

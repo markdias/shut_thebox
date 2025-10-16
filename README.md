@@ -24,7 +24,7 @@ This launches Vite's development server (default port `5173`). Open the printed 
 - Mobile header menu that collapses into a snug frame hugging the menu toggle so the dice line up as tightly as the Start Game button row, then expands again to push the board back down when reopened.
 - Desktop easter egg: double-click tile 12 to guarantee your next roll totals twelve.
 - Multiple presentation themes including the new **Tabletop felt** look inspired by the real wooden box.
-- Hidden learning games: enter the code `learn` in Settings to unlock shape and dice-counting mini games for kids. The selected activity now replaces the main board with animated dice or fully drawn shapes so you can practise together, answer with the familiar 1–12 tiles (stacked in two tidy rows on phones and stretched into a single strip on larger screens), and tap the illustration to hop to the next challenge before diving back into Shut the Box.
+- Hidden learning games: enter the code `learn` in Settings to unlock shape, dice-counting, dot flash, and mixed-math mini games for kids. The selected activity now replaces the main board with animated dice, fully drawn shapes, shimmering dot clusters, or colourful equations so you can practise together, answer with the familiar tiles (and extend beyond 12 when giant shapes appear), and tap the illustration to hop to the next challenge before diving back into Shut the Box.
 
 ## Project structure
 

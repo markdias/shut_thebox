@@ -7,6 +7,40 @@ function rollDice(): number[] {
   return Array.from({ length: DICE_COUNT }, () => Math.floor(Math.random() * 6) + 1);
 }
 
+const PIP_LAYOUTS: Record<number, { col: number; row: number }[]> = {
+  1: [{ col: 2, row: 2 }],
+  2: [
+    { col: 1, row: 1 },
+    { col: 3, row: 3 }
+  ],
+  3: [
+    { col: 1, row: 1 },
+    { col: 2, row: 2 },
+    { col: 3, row: 3 }
+  ],
+  4: [
+    { col: 1, row: 1 },
+    { col: 3, row: 1 },
+    { col: 1, row: 3 },
+    { col: 3, row: 3 }
+  ],
+  5: [
+    { col: 1, row: 1 },
+    { col: 3, row: 1 },
+    { col: 2, row: 2 },
+    { col: 1, row: 3 },
+    { col: 3, row: 3 }
+  ],
+  6: [
+    { col: 1, row: 1 },
+    { col: 3, row: 1 },
+    { col: 1, row: 2 },
+    { col: 3, row: 2 },
+    { col: 1, row: 3 },
+    { col: 3, row: 3 }
+  ]
+};
+
 const DiceDotsGame = () => {
   const [dice, setDice] = useState<number[]>(() => rollDice());
   const [guess, setGuess] = useState('');
@@ -63,18 +97,29 @@ const DiceDotsGame = () => {
               : 'Six dice are rolling with their values hidden until you reveal them.'
           }
         >
-          {dice.map((value, index) => (
-            <span
-              key={`die-${index}`}
-              className={classNames('die', revealed ? `die-face-${value}` : 'die-empty', {
-                rolling
-              })}
-            >
-              {revealed
-                ? [...Array(value)].map((_, pipIndex) => <span key={pipIndex} className="pip" />)
-                : <span className="die-placeholder">?</span>}
-            </span>
-          ))}
+          {dice.map((value, index) => {
+            const pipLayout = PIP_LAYOUTS[value];
+            return (
+              <span
+                key={`die-${index}`}
+                className={classNames('die', revealed ? 'die-revealed' : 'die-empty', {
+                  rolling
+                })}
+              >
+                {revealed ? (
+                  pipLayout.map((position, pipIndex) => (
+                    <span
+                      key={pipIndex}
+                      className="pip"
+                      style={{ gridColumn: position.col, gridRow: position.row }}
+                    />
+                  ))
+                ) : (
+                  <span className="die-placeholder">?</span>
+                )}
+              </span>
+            );
+          })}
         </div>
         <p className="learning-hint" aria-live="polite">
           {revealed

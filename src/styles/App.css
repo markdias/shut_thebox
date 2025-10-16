@@ -3596,6 +3596,12 @@ button.ghost:disabled {
   }
 }
 
+.learning-number-extension {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
 .learning-number-button {
   display: inline-flex;
   align-items: center;
@@ -3610,6 +3616,17 @@ button.ghost:disabled {
   box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.35), 0 8px 18px rgba(15, 23, 42, 0.55);
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.learning-number-button.extend {
+  width: min(100%, 320px);
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.42), rgba(147, 197, 253, 0.48));
+}
+
+.learning-number-button.extend span {
+  font-size: 0.95rem;
 }
 
 .learning-number-button:hover,
@@ -3640,6 +3657,14 @@ button.ghost:disabled {
   color: rgba(226, 232, 240, 0.84);
 }
 
+.learning-feedback.correct p {
+  color: rgba(134, 239, 172, 0.92);
+}
+
+.learning-feedback.incorrect p {
+  color: rgba(248, 189, 180, 0.9);
+}
+
 .learning-hint {
   font-size: 0.85rem;
   color: rgba(148, 163, 184, 0.9);
@@ -3661,6 +3686,63 @@ button.ghost:disabled {
 
 .learning-dice-tray.rolling .die {
   animation-duration: 0.55s;
+}
+
+.dot-count-display {
+  position: relative;
+  width: clamp(220px, 45vw, 320px);
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  border-radius: 1.2rem;
+  background: radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.7), rgba(2, 6, 23, 0.85));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: inset 0 0 18px rgba(96, 165, 250, 0.22), 0 24px 45px rgba(2, 6, 23, 0.55);
+  overflow: hidden;
+}
+
+.dot-count-dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(249, 250, 251, 0.95), rgba(148, 163, 184, 0.4));
+  box-shadow: 0 6px 12px rgba(15, 23, 42, 0.45);
+}
+
+.math-challenge {
+  gap: 1rem;
+}
+
+.math-challenge-equation {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.18), rgba(124, 58, 237, 0.18));
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.25);
+}
+
+.math-challenge-equation strong {
+  font-size: clamp(1.4rem, 3vw + 0.9rem, 2.2rem);
+  letter-spacing: 0.05em;
+}
+
+.math-operation-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.2);
+  color: rgba(191, 219, 254, 0.95);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.math-challenge-actions {
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 640px) {
