@@ -6,6 +6,7 @@ import ShapesGame from './ShapesGame';
 import DiceDotsGame from './DiceDotsGame';
 import DotCountingGame from './DotCountingGame';
 import MathChallengeGame from './MathChallengeGame';
+import WordSoundGame from './WordSoundGame';
 import type { LearningGameId } from '../../types';
 
 const renderGame = (game: LearningGameId | null) => {
@@ -18,6 +19,8 @@ const renderGame = (game: LearningGameId | null) => {
       return <DotCountingGame />;
     case 'math':
       return <MathChallengeGame />;
+    case 'words':
+      return <WordSoundGame />;
     default:
       return null;
   }

@@ -2,7 +2,7 @@ export type OneDieRule = 'after789' | 'totalUnder6' | 'never';
 export type ScoringMode = 'lowest' | 'target' | 'instant';
 export type ThemeName = 'neon' | 'matrix' | 'classic' | 'tabletop';
 
-export type LearningGameId = 'shapes' | 'dice' | 'dots' | 'math';
+export type LearningGameId = 'shapes' | 'dice' | 'dots' | 'math' | 'words';
 
 export interface GameOptions {
   maxTile: number;

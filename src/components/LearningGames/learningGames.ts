@@ -8,6 +8,11 @@ export interface LearningGameDefinition {
 
 export const LEARNING_GAMES: LearningGameDefinition[] = [
   {
+    id: 'words',
+    title: 'Word sound builder',
+    description: 'Choose a word length, tap each letter to hear it, then speak the full word.'
+  },
+  {
     id: 'shapes',
     title: 'Shape explorer',
     description: 'Guess the corners and sides of colorful shapes.'

@@ -3537,6 +3537,109 @@ button.ghost:disabled {
   gap: 0.85rem;
 }
 
+.learning-word-game {
+  gap: 1.1rem;
+}
+
+.learning-word-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.learning-word-length {
+  min-width: 120px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 0.45rem 0.85rem;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.learning-word-length.active {
+  border-color: rgba(59, 130, 246, 0.75);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+  transform: translateY(-1px);
+}
+
+.learning-word-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.learning-word-speak {
+  min-width: 160px;
+}
+
+.learning-word-letters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 0.4rem 0;
+}
+
+.learning-letter-button {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  background: radial-gradient(circle at 50% 35%, rgba(148, 197, 253, 0.18), rgba(30, 64, 175, 0.24));
+  color: rgba(226, 232, 240, 0.94);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.learning-letter-button:hover,
+.learning-letter-button:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.65);
+  box-shadow: 0 12px 26px rgba(59, 130, 246, 0.25);
+}
+
+.learning-letter-button:focus {
+  outline: none;
+}
+
+.learning-letter-button.speaking {
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 0 16px 34px rgba(59, 130, 246, 0.32);
+  transform: translateY(-2px);
+}
+
+.learning-letter-button.word {
+  animation: learning-word-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes learning-word-pulse {
+  0% {
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0.0);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(59, 130, 246, 0.26);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0.0);
+  }
+}
+
+.learning-word-message {
+  margin: 0.35rem 0 0;
+  text-align: center;
+  color: rgba(191, 219, 254, 0.9);
+}
+
+.learning-word-support {
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(148, 163, 184, 0.88);
+}
+
 .learning-pressable {
   position: relative;
   display: flex;
