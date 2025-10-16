@@ -12,6 +12,8 @@ const WORDS_BY_LENGTH: Record<WordLength, string[]> = {
   6: ['planet', 'rocket', 'friend', 'puzzle', 'garden', 'school', 'silver', 'sunset', 'butter', 'castle']
 };
 
+const CHILD_VOICE_KEYWORDS = ['child', 'kid', 'boy', 'girl', 'junior', 'young', 'teen'];
+
 const DEFAULT_LENGTH: WordLength = 3;
 
 const pickRandomWord = (length: WordLength, previous?: string): string => {
@@ -36,6 +38,7 @@ const WordSoundGame = () => {
   const [wordLength, setWordLength] = useState<WordLength>(DEFAULT_LENGTH);
   const [word, setWord] = useState<string>(() => pickRandomWord(DEFAULT_LENGTH));
   const [speechAvailable, setSpeechAvailable] = useState(false);
+  const [preferredVoice, setPreferredVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [speakingLetterIndex, setSpeakingLetterIndex] = useState<number | null>(null);
   const [speakingWord, setSpeakingWord] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Choose a word length, then tap a letter to hear it.');
@@ -51,10 +54,33 @@ const WordSoundGame = () => {
         ? 'Choose a word length, then tap a letter to hear it.'
         : 'Choose a word length and sound out each letter together—audio playback is unavailable here.'
     );
-    return () => {
-      if (supported) {
-        window.speechSynthesis.cancel();
+
+    if (!supported) {
+      return;
+    }
+
+    const synth = window.speechSynthesis;
+
+    const selectChildFriendlyVoice = () => {
+      const voices = synth.getVoices();
+      if (!voices.length) {
+        return;
       }
+
+      const englishVoices = voices.filter((voice) => voice.lang?.toLowerCase().startsWith('en'));
+      const matchByName = englishVoices.find((voice) =>
+        CHILD_VOICE_KEYWORDS.some((keyword) => voice.name.toLowerCase().includes(keyword))
+      );
+      const fallback = englishVoices.find((voice) => voice.name.toLowerCase().includes('female')) ?? englishVoices[0];
+      setPreferredVoice(matchByName ?? fallback ?? voices[0] ?? null);
+    };
+
+    selectChildFriendlyVoice();
+    synth.addEventListener('voiceschanged', selectChildFriendlyVoice);
+
+    return () => {
+      synth.removeEventListener('voiceschanged', selectChildFriendlyVoice);
+      synth.cancel();
     };
   }, []);
 
@@ -67,14 +93,15 @@ const WordSoundGame = () => {
       }
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.95;
-      utterance.pitch = 1;
+      utterance.voice = preferredVoice ?? null;
+      utterance.rate = 0.9;
+      utterance.pitch = preferredVoice ? 1.2 : 1.15;
       utterance.onend = () => {
         onEnd?.();
       };
       window.speechSynthesis.speak(utterance);
     },
-    [speechAvailable]
+    [preferredVoice, speechAvailable]
   );
 
   const handleLengthSelect = useCallback(
@@ -123,7 +150,7 @@ const WordSoundGame = () => {
         }, 650);
         return;
       }
-      speakText(letter.toUpperCase(), () => {
+      speakText(letter, () => {
         setSpeakingLetterIndex((current) => (current === index ? null : current));
       });
     },
