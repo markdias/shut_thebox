@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import classNames from 'classnames';
+import { useEffect, useMemo, useState } from 'react';
 
 const DICE_COUNT = 6;
 
@@ -11,10 +12,20 @@ const DiceDotsGame = () => {
   const [guess, setGuess] = useState('');
   const [revealed, setRevealed] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [rolling, setRolling] = useState(false);
 
   const total = useMemo(() => dice.reduce((sum, value) => sum + value, 0), [dice]);
 
+  useEffect(() => {
+    if (!rolling) {
+      return;
+    }
+    const timer = window.setTimeout(() => setRolling(false), 650);
+    return () => window.clearTimeout(timer);
+  }, [rolling]);
+
   const handleRoll = () => {
+    setRolling(true);
     setDice(rollDice());
     setGuess('');
     setResult(null);
@@ -43,13 +54,33 @@ const DiceDotsGame = () => {
         <p>Roll six dice and guess the total number of dots.</p>
       </header>
       <div className="learning-card-body">
-        <div className="dice-row" role="img" aria-label={`Six dice rolled with a total of ${revealed ? total : 'hidden'}.`}>
+        <div
+          className={classNames('learning-dice-tray', { rolling })}
+          role="img"
+          aria-label={
+            revealed
+              ? `Six dice showing ${dice.join(', ')} for a total of ${total}`
+              : 'Six dice are rolling with their values hidden until you reveal them.'
+          }
+        >
           {dice.map((value, index) => (
-            <span key={`die-${index}`} className={`dice-face ${revealed ? 'revealed' : ''}`} aria-hidden="true">
-              {revealed ? value : '❓'}
+            <span
+              key={`die-${index}`}
+              className={classNames('die', revealed ? `die-face-${value}` : 'die-empty', {
+                rolling
+              })}
+            >
+              {revealed
+                ? [...Array(value)].map((_, pipIndex) => <span key={pipIndex} className="pip" />)
+                : <span className="die-placeholder">?</span>}
             </span>
           ))}
         </div>
+        <p className="learning-hint" aria-live="polite">
+          {revealed
+            ? `The dice landed on ${dice.join(', ')} for a total of ${total}.`
+            : 'Imagine the pips and add them in your head before you press reveal!'}
+        </p>
         <label className="field">
           <span className="field-label">Your guess</span>
           <input
@@ -72,9 +103,6 @@ const DiceDotsGame = () => {
         <div className="learning-feedback" role="status" aria-live="polite">
           {result ? <p>{result}</p> : <p>Tip: Add the numbers you see in your head before you reveal!</p>}
         </div>
-        {revealed && (
-          <p className="learning-hint">The dice showed: {dice.join(', ')}.</p>
-        )}
       </div>
     </div>
   );

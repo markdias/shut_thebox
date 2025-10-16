@@ -3397,6 +3397,65 @@ button.ghost:disabled {
   color: rgba(226, 232, 240, 0.72);
 }
 
+.learning-board .panel-body {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.learning-board-header {
+  display: grid;
+  gap: 0.4rem;
+  text-align: center;
+}
+
+.learning-board-kicker {
+  justify-self: center;
+  padding: 0.3rem 0.85rem 0.24rem;
+  border-radius: 999px;
+  border: 1px solid rgba(147, 197, 253, 0.4);
+  background: rgba(59, 130, 246, 0.18);
+  color: rgba(191, 219, 254, 0.92);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.learning-board-header h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.4vw + 0.9rem, 1.8rem);
+}
+
+.learning-board-header p {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.76);
+}
+
+.learning-board-switch {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.learning-board-content {
+  display: flex;
+  justify-content: center;
+}
+
+.learning-board-content .learning-card {
+  width: min(100%, 680px);
+}
+
+.learning-board-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.learning-board-actions .ghost {
+  min-width: 220px;
+}
+
 .learning-games-selector {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -3462,10 +3521,111 @@ button.ghost:disabled {
   gap: 0.85rem;
 }
 
-.learning-question-grid {
+.shape-display {
+  display: grid;
+  justify-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 0 0.25rem;
+}
+
+.shape-canvas {
+  width: clamp(200px, 40vw, 260px);
+  aspect-ratio: 1 / 1;
+  border-radius: 1.25rem;
+  background: radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.6), rgba(2, 6, 23, 0.82));
+  border: 1px solid rgba(59, 130, 246, 0.32);
+  box-shadow: inset 0 0 18px rgba(59, 130, 246, 0.25), 0 24px 45px rgba(2, 6, 23, 0.55);
+}
+
+.shape-corner {
+  filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.45));
+}
+
+.shape-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(148, 163, 184, 0.92);
+  text-align: center;
+  max-width: 32ch;
+}
+
+.shape-art-button {
+  border: none;
+  padding: 0;
+  background: transparent;
+  border-radius: 1.25rem;
+  display: inline-flex;
+  cursor: default;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shape-art-button.ready {
+  cursor: pointer;
+}
+
+.shape-art-button.ready:hover .shape-canvas,
+.shape-art-button.ready:focus-visible .shape-canvas {
+  box-shadow: inset 0 0 22px rgba(59, 130, 246, 0.35), 0 32px 55px rgba(2, 6, 23, 0.65);
+}
+
+.shape-art-button:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.85);
+  outline-offset: 6px;
+}
+
+.learning-number-board {
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.learning-number-board h5 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.learning-number-grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(6, minmax(3rem, 1fr));
+}
+
+@media (min-width: 900px) {
+  .learning-number-grid {
+    grid-template-columns: repeat(12, minmax(2.5rem, 1fr));
+  }
+}
+
+.learning-number-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 0.5rem;
+  border: none;
+  border-radius: 0.9rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(226, 232, 240, 0.95);
+  background: linear-gradient(145deg, rgba(37, 99, 235, 0.35), rgba(59, 130, 246, 0.45));
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.35), 0 8px 18px rgba(15, 23, 42, 0.55);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.learning-number-button:hover,
+.learning-number-button:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: inset 0 0 0 1px rgba(191, 219, 254, 0.4), 0 16px 26px rgba(15, 23, 42, 0.6);
+}
+
+.learning-number-button.correct {
+  background: linear-gradient(145deg, rgba(34, 197, 94, 0.45), rgba(74, 222, 128, 0.55));
+  box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.6), 0 18px 30px rgba(22, 101, 52, 0.45);
+}
+
+.learning-number-button.incorrect {
+  background: linear-gradient(145deg, rgba(220, 38, 38, 0.55), rgba(248, 113, 113, 0.45));
+  box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.6), 0 18px 30px rgba(127, 29, 29, 0.4);
 }
 
 .learning-actions {
@@ -3485,26 +3645,22 @@ button.ghost:disabled {
   color: rgba(148, 163, 184, 0.9);
 }
 
-.dice-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
-  gap: 0.5rem;
-}
-
-.dice-face {
+.learning-dice-tray {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  background: rgba(15, 23, 42, 0.7);
-  font-size: 1.35rem;
+  gap: 1.1rem;
+  padding: 1rem 0 0.25rem;
 }
 
-.dice-face.revealed {
-  border-color: rgba(59, 130, 246, 0.45);
-  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.25);
+.learning-dice-tray .die {
+  --die-size: clamp(4.5rem, 10vw + 1.8rem, 6rem);
+  --die-padding: clamp(0.9rem, 1.5vw + 0.4rem, 1.3rem);
+  --die-gap: clamp(0.35rem, 1vw + 0.2rem, 0.55rem);
+}
+
+.learning-dice-tray.rolling .die {
+  animation-duration: 0.55s;
 }
 
 @media (max-width: 640px) {
@@ -3514,5 +3670,9 @@ button.ghost:disabled {
 
   .learning-card {
     padding: 0.9rem 1rem;
+  }
+
+  .learning-board-actions {
+    flex-direction: column;
   }
 }
