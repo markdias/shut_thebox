@@ -24,7 +24,7 @@ This launches Vite's development server (default port `5173`). Open the printed 
 - Mobile header menu that collapses into a snug frame hugging the menu toggle so the dice line up as tightly as the Start Game button row, then expands again to push the board back down when reopened.
 - Desktop easter egg: double-click tile 12 to guarantee your next roll totals twelve.
 - Multiple presentation themes including the new **Tabletop felt** look inspired by the real wooden box.
-- Learning games toggle: use the **More Games** button next to the header hint controls to swap the main board for shape, dice-counting, dot flash, mixed-math, and word-sound mini games. The selected activity replaces the board with animated dice, fully drawn shapes, shimmering dot clusters, colourful equations, or letter tiles so you can practise together, answer with the familiar tiles (and extend beyond 12 when giant shapes appear), choose the operations and difficulty for the math mixer, and tap the illustration to hop to the next challenge before diving back into Shut the Box. The shape explorer lets you tap each glowing corner dot to mark it counted and shows the confirmed total right inside the display. The dot flash game now keeps up to 36 non-overlapping dots on screen, lets you tap each dot to track your progress, and swaps typing for Shut the Box-style tiles. The math mixer offers a Starter difficulty tailored for early learners and reveals the correct answer directly in the equation once you check your work. The Dice dot detective activity lets you pick between one and six dice so learners can focus on quick facts or stretch to bigger totals, then tap Shut the Box-style tiles to lock in their guess before revealing the roll. The Word sound builder lets you choose 2- to 6-letter words, tap each letter to hear it spoken, and replay the full word to confirm the pronunciation together. It now favours a child-friendly voice where your browser provides one and speaks individual letters using lowercase sounds for early readers.
+- Learning games toggle: use the **More Games** button next to the header hint controls to swap the main board for shape, dice-counting, dot flash, mixed-math, and word-sound mini games. The selected activity replaces the board with animated dice, fully drawn shapes, shimmering dot clusters, colourful equations, or letter tiles so you can practise together, answer with the familiar tiles (and extend beyond 12 when giant shapes appear), choose the operations and difficulty for the math mixer, and tap the illustration to hop to the next challenge before diving back into Shut the Box. The shape explorer lets you tap each glowing corner dot to mark it counted and shows the confirmed total right inside the display. The dot flash game now keeps up to 36 non-overlapping dots on screen, lets you tap each dot to track your progress, and swaps typing for Shut the Box-style tiles. The math mixer offers a Starter difficulty tailored for early learners and reveals the correct answer directly in the equation once you check your work. The Dice dot detective activity lets you pick between one and six dice so learners can focus on quick facts or stretch to bigger totals, then tap Shut the Box-style tiles to lock in their guess before revealing the roll. The Word sound builder lets you choose 2- to 6-letter words, tap each letter to hear it spoken, and replay the full word to confirm the pronunciation together. It now favours a child-friendly voice where your browser provides one, can use an optional Voice RSS key for a higher fidelity narrator, and speaks individual letters using lowercase sounds for early readers.
 
 ## Project structure
 
@@ -72,3 +72,21 @@ Enable GitHub Pages in the repo: Settings → Pages → Build and deployment →
 4) Environment variables
 
 If you use Contentful (or any env vars), add them as Repository → Settings → Secrets and variables → Actions → Variables, then reference via `VITE_...` when building.
+
+### Enhanced Word sound builder voice (optional)
+
+The Word sound builder can stream higher fidelity narration through [Voice RSS](https://www.voicerss.org/) when you provide an API key. Without it, the mini game falls back to the browser's built-in speech synthesis.
+
+1. Create a free Voice RSS account and copy your API key.
+2. Add the key to a `.env.local` file (or your deployment environment) as `VITE_VOICERSS_KEY`.
+3. (Optional) Override the default language, voice, audio format, or playback rate:
+
+   ```env
+   VITE_VOICERSS_KEY=your-api-key-here
+   VITE_VOICERSS_LANGUAGE=en-gb
+   VITE_VOICERSS_VOICE=Linda
+   VITE_VOICERSS_AUDIO_FORMAT=44khz_16bit_mono
+   VITE_VOICERSS_RATE=-1
+   ```
+
+The client automatically cancels any in-flight request if you trigger a new word or letter, and gracefully reverts to the browser voice (or text-only practise guidance) when the remote service is unavailable.
