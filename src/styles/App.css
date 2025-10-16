@@ -3537,6 +3537,66 @@ button.ghost:disabled {
   gap: 0.85rem;
 }
 
+.learning-pressable {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 1.35rem 1.6rem;
+  border: 1px solid rgba(148, 197, 253, 0.45);
+  border-radius: 1.4rem;
+  background: radial-gradient(circle at 50% 0%, rgba(148, 197, 253, 0.15), transparent 68%),
+    rgba(15, 23, 42, 0.8);
+  box-shadow: 0 26px 60px rgba(2, 6, 23, 0.55);
+  color: rgba(226, 232, 240, 0.92);
+  text-align: center;
+  font: inherit;
+  cursor: default;
+  transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  appearance: none;
+}
+
+.learning-pressable:focus {
+  outline: none;
+}
+
+.learning-pressable:focus-visible {
+  outline: 3px solid rgba(191, 219, 254, 0.85);
+  outline-offset: 6px;
+}
+
+.learning-pressable.ready {
+  cursor: pointer;
+  border-color: rgba(34, 197, 94, 0.58);
+  box-shadow: 0 34px 74px rgba(34, 197, 94, 0.25);
+}
+
+.learning-pressable.ready:hover {
+  transform: translateY(-2px);
+}
+
+.learning-pressable.ready:active {
+  transform: translateY(1px);
+}
+
+.learning-pressable.rolling {
+  border-color: rgba(236, 72, 153, 0.55);
+  box-shadow: 0 34px 82px rgba(236, 72, 153, 0.25);
+}
+
+.learning-pressable.success {
+  border-color: rgba(34, 197, 94, 0.75);
+  box-shadow: 0 42px 90px rgba(34, 197, 94, 0.32);
+}
+
+.learning-pressable.failure {
+  border-color: rgba(248, 113, 113, 0.65);
+  box-shadow: 0 36px 78px rgba(248, 113, 113, 0.28);
+}
+
 .learning-selection {
   margin: 0.5rem 0 0;
   font-size: 0.85rem;
@@ -3692,12 +3752,26 @@ button.ghost:disabled {
   color: rgba(148, 163, 184, 0.9);
 }
 
+.learning-dice-box {
+  max-width: 420px;
+  margin: 0.25rem auto 0.85rem;
+  padding: 1.4rem 1.6rem 1.6rem;
+}
+
+.learning-dice-box-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.68);
+}
+
 .learning-dice-tray {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 1.1rem;
-  padding: 1rem 0 0.25rem;
+  padding: 0.8rem 0 0.2rem;
 }
 
 .learning-dice-tray .die {
@@ -3850,19 +3924,27 @@ button.ghost:disabled {
   color: rgba(148, 163, 184, 0.85);
 }
 
-.math-challenge-equation {
-  display: grid;
-  gap: 0.35rem;
-  justify-items: center;
-  padding: 1rem;
-  border-radius: 1rem;
-  background: linear-gradient(145deg, rgba(59, 130, 246, 0.18), rgba(124, 58, 237, 0.18));
-  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.25);
+.learning-dice-box-message {
+  font-size: 0.9rem;
+  color: rgba(226, 232, 240, 0.82);
+  max-width: 32ch;
 }
 
-.math-challenge-equation strong {
-  font-size: clamp(1.4rem, 3vw + 0.9rem, 2.2rem);
-  letter-spacing: 0.05em;
+.math-challenge-box {
+  gap: 0.6rem;
+  margin: 0.35rem 0 0.85rem;
+  padding: 1.5rem 1.65rem;
+}
+
+.math-challenge-box strong {
+  font-size: clamp(1.6rem, 3vw + 1rem, 2.4rem);
+  letter-spacing: 0.06em;
+}
+
+.math-challenge-box-message {
+  font-size: 0.95rem;
+  color: rgba(226, 232, 240, 0.85);
+  max-width: 36ch;
 }
 
 .math-operation-tag {

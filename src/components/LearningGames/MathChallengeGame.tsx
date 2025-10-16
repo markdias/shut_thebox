@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type Operation = 'add' | 'subtract' | 'multiply' | 'divide';
@@ -197,10 +198,10 @@ const MathChallengeGame = () => {
     setAnswerRevealed(true);
 
     if (parsed === challenge.answer) {
-      setFeedback('Great work! Ready for another question?');
+      setFeedback('Great work! Tap the sum box for another question.');
       setStatus('correct');
     } else {
-      setFeedback('Almost! The correct answer is shown above—try another question.');
+      setFeedback('Almost! The correct answer is shown above—tap the sum box to try another question.');
       setStatus('incorrect');
     }
   };
@@ -228,6 +229,11 @@ const MathChallengeGame = () => {
         : [...current, operation]
     );
   };
+
+  const defaultFeedback = answerRevealed
+    ? 'Tap the sum box to load a new question.'
+    : 'Solve the sum, then tap the box whenever you want a new question.';
+  const boxMessage = feedback ?? defaultFeedback;
 
   return (
     <div className="learning-card">
@@ -285,10 +291,22 @@ const MathChallengeGame = () => {
             <span className="field-hint">{DIFFICULTY_DETAILS[difficulty].description}</span>
           </label>
         </div>
-        <div className="math-challenge-equation" aria-live="polite">
+        <button
+          type="button"
+          className={classNames('learning-pressable', 'math-challenge-box', {
+            ready: true,
+            success: status === 'correct',
+            failure: status === 'incorrect'
+          })}
+          onClick={handleNext}
+          aria-label="Tap to load a new math challenge"
+        >
           <span className="math-operation-tag">{operationLabel}</span>
           <strong>{prompt}</strong>
-        </div>
+          <span className="math-challenge-box-message" role="status" aria-live="polite">
+            {boxMessage}
+          </span>
+        </button>
         <label className="field">
           <span className="field-label">Your answer</span>
           <input
@@ -302,12 +320,6 @@ const MathChallengeGame = () => {
           <button type="button" className="primary" onClick={handleCheck}>
             Check my answer
           </button>
-          <button type="button" className="secondary" onClick={handleNext}>
-            New question
-          </button>
-        </div>
-        <div className={`learning-feedback ${status}`} role="status" aria-live="polite">
-          <p>{feedback ?? 'Tip: Use mental math tricks like doubles or times tables to go faster.'}</p>
         </div>
       </div>
     </div>
