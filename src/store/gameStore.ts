@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { GameOptions, GamePhase, Player, TurnState } from '../types';
+import { GameOptions, GamePhase, LearningGameId, Player, TurnState } from '../types';
 import { generateTileCombos, isSameCombo } from '../utils/combinations';
 import { canUseOneDie, createInitialTiles, shouldInstantWin, sumTiles } from '../utils/gameLogic';
 import { createId } from '../utils/id';
@@ -14,6 +14,7 @@ interface GameLogEntry {
 interface GameStore {
   phase: GamePhase;
   options: GameOptions;
+  activeLearningGame: LearningGameId | null;
   tilesOpen: number[];
   players: Player[];
   round: number;
@@ -49,6 +50,7 @@ interface GameStore {
   resetGame: () => void;
   clearHistory: () => void;
   triggerSecretDoubleTwelve: () => void;
+  setActiveLearningGame: (game: LearningGameId | null) => void;
 }
 
 function createDefaultPlayers(): Player[] {
@@ -139,6 +141,7 @@ export const useGameStore = create<GameStore>((set, get) => {
   return {
     phase: 'setup',
     options: { ...defaultOptions, theme: initialTheme },
+    activeLearningGame: null,
     tilesOpen: createInitialTiles(defaultOptions.maxTile),
     players: initialPlayers,
     round: initialRound,
@@ -165,6 +168,13 @@ export const useGameStore = create<GameStore>((set, get) => {
 
         if (key === 'scoring' && value === 'instant') {
           nextOptions.instantWinOnShut = true;
+        }
+
+        if (key === 'showLearningGames' && value === false) {
+          return {
+            options: nextOptions,
+            activeLearningGame: null
+          };
         }
 
         if (key === 'maxTile' && state.phase !== 'inProgress') {
@@ -266,6 +276,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
     clearHistory: () => set({ logs: [] }),
     triggerSecretDoubleTwelve: () => set({ nextForcedRoll: { total: 12, diceCount: 2 } }),
+    setActiveLearningGame: (game) => set({ activeLearningGame: game }),
     startGame: () => {
       if (restartTimer) {
         window.clearInterval(restartTimer);

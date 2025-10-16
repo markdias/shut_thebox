@@ -3,6 +3,7 @@ import { useMemo, useEffect, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { createInitialTiles } from '../utils/gameLogic';
+import LearningGameBoard from './LearningGames/LearningGameBoard';
 
 function TileButton({
   value,
@@ -39,7 +40,7 @@ function TileButton({
   );
 }
 
-function GameBoard() {
+function StandardGameBoard() {
   const tilesOpen = useGameStore((state) => state.tilesOpen);
   const options = useGameStore((state) => state.options);
   const turn = useGameStore((state) => state.turn);
@@ -520,6 +521,17 @@ function GameBoard() {
       </div>
     </section>
   );
+}
+
+function GameBoard() {
+  const showLearningGames = useGameStore((state) => Boolean(state.options.showLearningGames));
+  const activeLearningGame = useGameStore((state) => state.activeLearningGame);
+
+  if (showLearningGames && activeLearningGame) {
+    return <LearningGameBoard />;
+  }
+
+  return <StandardGameBoard />;
 }
 
 export default GameBoard;
