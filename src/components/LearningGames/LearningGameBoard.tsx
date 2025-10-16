@@ -4,6 +4,8 @@ import { useGameStore } from '../../store/gameStore';
 import { LEARNING_GAMES } from './learningGames';
 import ShapesGame from './ShapesGame';
 import DiceDotsGame from './DiceDotsGame';
+import DotCountingGame from './DotCountingGame';
+import MathChallengeGame from './MathChallengeGame';
 import type { LearningGameId } from '../../types';
 
 const renderGame = (game: LearningGameId | null) => {
@@ -12,6 +14,10 @@ const renderGame = (game: LearningGameId | null) => {
       return <ShapesGame />;
     case 'dice':
       return <DiceDotsGame />;
+    case 'dots':
+      return <DotCountingGame />;
+    case 'math':
+      return <MathChallengeGame />;
     default:
       return null;
   }

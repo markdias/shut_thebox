@@ -83,6 +83,62 @@ const REGULAR_POLYGON_SHAPES: ShapeInfo[] = [
     sides: 12,
     funFact: 'A regular dodecagon looks almost like a circle with twelve gentle edges.',
     drawing: { kind: 'regularPolygon', sides: 12 }
+  },
+  {
+    name: 'Tridecagon',
+    corners: 13,
+    sides: 13,
+    funFact: 'Tridecagon means thirteen corners—great for practising bigger numbers!',
+    drawing: { kind: 'regularPolygon', sides: 13 }
+  },
+  {
+    name: 'Tetradecagon',
+    corners: 14,
+    sides: 14,
+    funFact: 'A tetradecagon has fourteen sides—try spotting patterns while you count.',
+    drawing: { kind: 'regularPolygon', sides: 14 }
+  },
+  {
+    name: 'Pentadecagon',
+    corners: 15,
+    sides: 15,
+    funFact: 'Pentadecagon comes from Greek words for "five" and "ten"—together they make fifteen.',
+    drawing: { kind: 'regularPolygon', sides: 15 }
+  },
+  {
+    name: 'Hexadecagon',
+    corners: 16,
+    sides: 16,
+    funFact: 'Sixteen sides look almost round—keep track by tapping each glowing corner.',
+    drawing: { kind: 'regularPolygon', sides: 16 }
+  },
+  {
+    name: 'Heptadecagon',
+    corners: 17,
+    sides: 17,
+    funFact: 'Seventeen-sided shapes are rare, so take your time and count carefully.',
+    drawing: { kind: 'regularPolygon', sides: 17 }
+  },
+  {
+    name: 'Octadecagon',
+    corners: 18,
+    sides: 18,
+    funFact: 'An octadecagon has eighteen equal edges—group them in threes or sixes to keep count.',
+    drawing: { kind: 'regularPolygon', sides: 18 }
+  },
+  {
+    name: 'Enneadecagon',
+    corners: 19,
+    sides: 19,
+    funFact: 'Nineteen corners! Enneadecagon literally means "nine plus ten" corners.',
+    drawing: { kind: 'regularPolygon', sides: 19 }
+  },
+  {
+    name: 'Icosagon',
+    corners: 20,
+    sides: 20,
+    funFact: 'With twenty sides, an icosagon is a fantastic challenge for super counters.',
+    drawing: { kind: 'regularPolygon', sides: 20 }
   }
 ];
 
@@ -165,7 +221,9 @@ const CUSTOM_SHAPES: ShapeInfo[] = [
 
 const SHAPES: ShapeInfo[] = [...REGULAR_POLYGON_SHAPES, ...CUSTOM_SHAPES];
 
-const NUMBER_TILES = Array.from({ length: 12 }, (_, index) => index + 1);
+const BASE_TILE_LIMIT = 12;
+const TILE_BATCH = 6;
+const MAX_TILE_LIMIT = 36;
 
 const createRegularPolygonPoints = (sides: number, radius = 56, rotationDeg = -90): Point[] => {
   const angleStep = (Math.PI * 2) / sides;
@@ -228,37 +286,45 @@ function getRandomShape(previousName?: string): ShapeInfo {
 
 const ShapesGame = () => {
   const [shape, setShape] = useState<ShapeInfo>(() => getRandomShape());
-  const [stage, setStage] = useState<'sides' | 'corners' | 'complete'>('sides');
+  const [stage, setStage] = useState<'question' | 'complete'>('question');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [lastGuess, setLastGuess] = useState<number | null>(null);
   const [guessStatus, setGuessStatus] = useState<'neutral' | 'correct' | 'incorrect'>('neutral');
+  const [maxTile, setMaxTile] = useState(BASE_TILE_LIMIT);
 
   const art = useMemo(() => renderShapeArt(shape), [shape]);
   const includeZeroTile = shape.sides === 0 || shape.corners === 0 || lastGuess === 0;
-  const numberTiles = useMemo(
-    () => (includeZeroTile ? [0, ...NUMBER_TILES] : NUMBER_TILES),
-    [includeZeroTile]
-  );
+  const numberTiles = useMemo(() => {
+    const numbers = Array.from({ length: maxTile }, (_, index) => index + 1);
+    return includeZeroTile ? [0, ...numbers] : numbers;
+  }, [includeZeroTile, maxTile]);
+
+  const highestNeeded = Math.max(shape.sides, shape.corners);
+  const canExtendTiles = stage !== 'complete' && highestNeeded > maxTile && maxTile < MAX_TILE_LIMIT;
+  const nextExtensionTarget = Math.min(maxTile + TILE_BATCH, MAX_TILE_LIMIT);
 
   const questionPrompt = useMemo(() => {
-    if (stage === 'sides') {
-      return `How many sides does this ${shape.name} have?`;
+    if (stage === 'complete') {
+      return `Awesome! You matched every detail of the ${shape.name}.`;
     }
-    if (stage === 'corners') {
-      return `Great! Now how many corners does this ${shape.name} have?`;
+    if (shape.sides === 0) {
+      return `Does this ${shape.name} have any sides or corners?`;
     }
-    return `Awesome! You matched every detail of the ${shape.name}.`;
+    return `How many sides does this ${shape.name} have?`;
   }, [shape, stage]);
 
   const hintPrompt = useMemo(() => {
     if (stage === 'complete') {
       return 'Tap the glowing shape to explore the next challenge.';
     }
-    if (shape.corners === 0) {
-      return 'Curved shapes have no corners—use the 0 tile when you need it.';
+    if (shape.sides === 0) {
+      return 'Curved shapes have no straight sides or corners—use the 0 tile.';
+    }
+    if (canExtendTiles) {
+      return `Need a bigger number? Tap "Add more numbers" to reach up to ${nextExtensionTarget}.`;
     }
     return 'Glow-dots mark every corner. Count them before choosing a number tile.';
-  }, [shape, stage]);
+  }, [canExtendTiles, nextExtensionTarget, shape, stage]);
 
   const handleNumberPick = (value: number) => {
     if (stage === 'complete') {
@@ -268,23 +334,13 @@ const ShapesGame = () => {
     }
 
     setLastGuess(value);
-    const expected = stage === 'sides' ? shape.sides : shape.corners;
 
-    if (value === expected) {
-      if (stage === 'sides') {
-        setFeedback(
-          `Nice counting! A ${shape.name} has ${shape.sides} sides. Now pick how many corners it has.`
-        );
-        setStage('corners');
-        setGuessStatus('neutral');
-        setLastGuess(null);
-      } else {
-        setFeedback(
-          `Great job! A ${shape.name} has ${shape.sides} sides and ${shape.corners} corners. Tap the shape to keep exploring.`
-        );
-        setGuessStatus('correct');
-        setStage('complete');
-      }
+    if (value === shape.sides) {
+      setFeedback(
+        `Great job! A ${shape.name} has ${shape.sides} sides and corners. Tap the shape to keep exploring.`
+      );
+      setGuessStatus('correct');
+      setStage('complete');
     } else {
       setFeedback('Not quite—count again and try another number tile.');
       setGuessStatus('incorrect');
@@ -293,26 +349,32 @@ const ShapesGame = () => {
 
   const handleNextShape = () => {
     setShape((current) => getRandomShape(current.name));
-    setStage('sides');
+    setStage('question');
     setFeedback(null);
     setGuessStatus('neutral');
     setLastGuess(null);
+    setMaxTile(BASE_TILE_LIMIT);
   };
 
   const handleShapeClick = () => {
     if (stage !== 'complete') {
-      setFeedback('Answer both questions first, then tap the shape to move on.');
+      setFeedback('Count the sides first, then tap the shape to move on.');
+      setGuessStatus('neutral');
       return;
     }
 
     handleNextShape();
   };
 
+  const handleExtendTiles = () => {
+    setMaxTile((current) => Math.min(current + TILE_BATCH, MAX_TILE_LIMIT));
+  };
+
   return (
     <div className="learning-card">
       <header className="learning-card-header">
         <h4>{shape.name} explorer</h4>
-        <p>Use the Shut the Box number tiles to answer each question, then tap the shape to continue.</p>
+        <p>Use the Shut the Box number tiles to answer the question, then tap the shape to continue.</p>
       </header>
       <div className="learning-card-body">
         <div className="shape-display">
@@ -323,7 +385,7 @@ const ShapesGame = () => {
             aria-label={
               stage === 'complete'
                 ? 'Show another shape'
-                : `${shape.name} illustration. Answer the questions before moving on.`
+                : `${shape.name} illustration. Count the sides before moving on.`
             }
           >
             {art}
@@ -341,8 +403,7 @@ const ShapesGame = () => {
                   : isActive && guessStatus === 'incorrect'
                   ? ' incorrect'
                   : '';
-              const labelTarget = stage === 'sides' ? 'sides' : 'corners';
-              const ariaLabel = value === 0 ? `Select zero ${labelTarget}` : `Select ${value} ${labelTarget}`;
+              const ariaLabel = value === 0 ? 'Select zero sides' : `Select ${value} sides`;
               return (
                 <button
                   key={value}
@@ -356,17 +417,29 @@ const ShapesGame = () => {
               );
             })}
           </div>
+          {canExtendTiles && (
+            <div className="learning-number-extension">
+              <button
+                type="button"
+                className="learning-number-button extend"
+                onClick={handleExtendTiles}
+                aria-label={`Add more number tiles up to ${nextExtensionTarget}`}
+              >
+                <span>+ Add numbers to {nextExtensionTarget}</span>
+              </button>
+            </div>
+          )}
         </section>
         <div className="learning-feedback" role="status" aria-live="polite">
           <p>{feedback ?? `Tip: ${shape.funFact}`}</p>
         </div>
         <div className="learning-hint" aria-live="polite">
-          {stage === 'corners' ? (
-            <p>Step 2: Pick the number of corners.</p>
-          ) : stage === 'complete' ? (
-            <p>✅ You matched both sides and corners! Tap the shape to explore the next one.</p>
+          {stage === 'complete' ? (
+            <p>✅ You matched the sides and corners! Tap the shape to explore the next one.</p>
+          ) : canExtendTiles ? (
+            <p>Need a bigger tile? Use “Add more numbers” and keep counting.</p>
           ) : (
-            <p>Step 1: Start with the sides.</p>
+            <p>Step 1: Count the glowing corners—the number of sides matches exactly.</p>
           )}
         </div>
       </div>
