@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const MIN_DICE = 1;
 const MAX_DICE = 6;
@@ -67,14 +67,25 @@ const DiceDotsGame = () => {
     setRevealed(false);
   };
 
-  const handleDiceCountChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const nextCount = Number(event.target.value);
-    setDiceCount(nextCount);
+  const updateDiceCount = (nextCount: number) => {
+    const clamped = Math.min(Math.max(nextCount, MIN_DICE), MAX_DICE);
+    if (clamped === diceCount) {
+      return;
+    }
+    setDiceCount(clamped);
     setRolling(true);
-    setDice(rollDice(nextCount));
+    setDice(rollDice(clamped));
     setGuess(null);
     setResult(null);
     setRevealed(false);
+  };
+
+  const handleDecreaseDice = () => {
+    updateDiceCount(diceCount - 1);
+  };
+
+  const handleIncreaseDice = () => {
+    updateDiceCount(diceCount + 1);
   };
 
   const handleGuessSelect = (value: number) => {
@@ -160,16 +171,34 @@ const DiceDotsGame = () => {
             ? `Ready for another round? Tap the dice box to roll and try a new total.`
             : 'Count the pips on each die, tap the tile that matches your total, then press check!'}
         </p>
-        <label className="field">
+        <div className="field dice-count-field">
           <span className="field-label">Dice in play</span>
-          <select value={diceCount} onChange={handleDiceCountChange}>
-            {Array.from({ length: MAX_DICE }, (_, index) => index + MIN_DICE).map((count) => (
-              <option key={count} value={count}>
-                {count}
-              </option>
-            ))}
-          </select>
-        </label>
+          <div className="field-stepper" role="group" aria-label="Choose the number of dice to roll">
+            <button
+              type="button"
+              className="field-stepper-button"
+              onClick={handleDecreaseDice}
+              disabled={diceCount <= MIN_DICE}
+              aria-label="Roll fewer dice"
+            >
+              −
+            </button>
+            <span className="field-stepper-value" aria-live="polite" aria-atomic="true">
+              {diceCount}
+            </span>
+            <span className="field-stepper-suffix">{diceLabel}</span>
+            <button
+              type="button"
+              className="field-stepper-button"
+              onClick={handleIncreaseDice}
+              disabled={diceCount >= MAX_DICE}
+              aria-label="Roll more dice"
+            >
+              +
+            </button>
+          </div>
+          <p className="field-hint">Use the buttons to roll between {MIN_DICE} and {MAX_DICE} dice.</p>
+        </div>
         <div className="field">
           <span className="field-label">Your guess</span>
           <div className="tiles-grid learning-tiles" role="group" aria-label="Choose your guess">
