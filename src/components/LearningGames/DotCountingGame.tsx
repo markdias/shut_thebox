@@ -309,11 +309,16 @@ const DotCountingGame = () => {
           <div className="field dot-count-slider">
             <span className="field-label">Dot flash size</span>
             <div className="dot-count-slider-values" aria-live="polite" aria-atomic="true">
-              <output aria-describedby={sliderHintId}>{pattern.count}</output>
-              <span>dots in this flash</span>
+              <span className="dot-count-slider-secret" aria-hidden="true">
+                Secret flash
+              </span>
+              <span className="sr-only">
+                The dot flash size stays hidden until you check your answer.
+              </span>
             </div>
             <p id={sliderHintId} className="field-hint">
-              {levelRangeLabel} The dots stay visible for about {formatFlashDuration(flashDurationMs)}.
+              {levelRangeLabel} The exact total stays secret until you check your answer. The dots stay
+              visible for about {formatFlashDuration(flashDurationMs)}.
             </p>
           </div>
         </section>

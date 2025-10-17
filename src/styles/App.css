@@ -4186,6 +4186,14 @@ button.ghost:disabled {
   color: #f8fafc;
 }
 
+.dot-count-slider-values .dot-count-slider-secret {
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #f8fafc;
+}
+
 .dot-count-slider-values span {
   font-size: 0.82rem;
   text-transform: uppercase;
