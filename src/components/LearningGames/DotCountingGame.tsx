@@ -73,6 +73,9 @@ const TILE_VALUES = Array.from({ length: GLOBAL_MAX_DOTS }, (_, index) => index 
 
 const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
+const randomIntInclusive = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
+
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 const shuffle = <T,>(values: T[]): T[] => {
@@ -121,9 +124,12 @@ const getFlashDuration = (level: LevelSpec, count: number) =>
 
 const formatFlashDuration = (milliseconds: number) => `${(milliseconds / 1000).toFixed(1)}s`;
 
+const createRandomPatternForLevel = (level: LevelSpec) =>
+  createDotPattern(randomIntInclusive(level.minDots, level.maxDots));
+
 const DotCountingGame = () => {
   const [levelId, setLevelId] = useState<LevelId>(INITIAL_LEVEL.id);
-  const [pattern, setPattern] = useState<DotPattern>(() => createDotPattern(INITIAL_LEVEL.minDots));
+  const [pattern, setPattern] = useState<DotPattern>(() => createRandomPatternForLevel(INITIAL_LEVEL));
   const [guess, setGuess] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [status, setStatus] = useState<'neutral' | 'correct' | 'incorrect'>('neutral');
@@ -142,8 +148,7 @@ const DotCountingGame = () => {
     [level.maxDots, level.minDots]
   );
 
-  const sliderId = useId();
-  const sliderHintId = `${sliderId}-hint`;
+  const sliderHintId = useId();
 
   const dotElements = useMemo(
     () =>
@@ -187,7 +192,7 @@ const DotCountingGame = () => {
   };
 
   const handleNewPattern = () => {
-    setPattern(createDotPattern(pattern.count));
+    setPattern(createRandomPatternForLevel(level));
     setGuess(null);
     setFeedback(null);
     setStatus('neutral');
@@ -204,19 +209,7 @@ const DotCountingGame = () => {
     const nextLevelId = event.target.value as LevelId;
     const nextLevel = LEVELS.find((entry) => entry.id === nextLevelId) ?? INITIAL_LEVEL;
     setLevelId(nextLevelId);
-    const adjustedCount = clamp(pattern.count, nextLevel.minDots, nextLevel.maxDots);
-    setPattern(createDotPattern(adjustedCount));
-    setGuess(null);
-    setFeedback(null);
-    setStatus('neutral');
-    setIsFlashVisible(true);
-    setFlashIteration((iteration) => iteration + 1);
-  };
-
-  const handleDotCountChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const nextCount = Number(event.target.value);
-    const clampedCount = clamp(nextCount, level.minDots, level.maxDots);
-    setPattern(createDotPattern(clampedCount));
+    setPattern(createRandomPatternForLevel(nextLevel));
     setGuess(null);
     setFeedback(null);
     setStatus('neutral');
@@ -245,7 +238,7 @@ const DotCountingGame = () => {
   }, [isFlashVisible, pattern.count, status]);
 
   const levelRangeLabel = useMemo(
-    () => `${level.minDots}–${level.maxDots} dots`,
+    () => `Each flash shows between ${level.minDots} and ${level.maxDots} dots.`,
     [level.maxDots, level.minDots]
   );
 
@@ -313,30 +306,16 @@ const DotCountingGame = () => {
               })}
             </div>
           </fieldset>
-          <label className="field dot-count-slider" htmlFor={sliderId}>
-            <span className="field-label">Dots in the flash</span>
-            <input
-              id={sliderId}
-              type="range"
-              min={level.minDots}
-              max={level.maxDots}
-              step={1}
-              value={pattern.count}
-              onChange={handleDotCountChange}
-              aria-describedby={sliderHintId}
-              aria-valuetext={`${pattern.count} dots`}
-              disabled={level.minDots === level.maxDots}
-            />
-            <div className="dot-count-slider-values">
-              <output htmlFor={sliderId} aria-live="polite" aria-atomic="true">
-                {pattern.count}
-              </output>
-              <span>dots</span>
+          <div className="field dot-count-slider">
+            <span className="field-label">Dot flash size</span>
+            <div className="dot-count-slider-values" aria-live="polite" aria-atomic="true">
+              <output aria-describedby={sliderHintId}>{pattern.count}</output>
+              <span>dots in this flash</span>
             </div>
             <p id={sliderHintId} className="field-hint">
-              {levelRangeLabel}. The dots stay visible for about {formatFlashDuration(flashDurationMs)}.
+              {levelRangeLabel} The dots stay visible for about {formatFlashDuration(flashDurationMs)}.
             </p>
-          </label>
+          </div>
         </section>
         <section className="learning-number-board" aria-live="polite">
           <h5>How many dots flashed?</h5>
