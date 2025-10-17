@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 interface DotSpec {
   id: number;
@@ -13,10 +13,63 @@ interface DotPattern {
   dots: DotSpec[];
 }
 
-const MIN_DOTS = 4;
-const MAX_DOTS = 36;
+interface LevelSpec {
+  id: 'starter' | 'challenger' | 'expert';
+  label: string;
+  description: string;
+  minDots: number;
+  maxDots: number;
+  baseFlashMs: number;
+  perDotMs: number;
+  minFlashMs: number;
+  maxFlashMs: number;
+}
+
 const EDGE_PADDING = 2;
-const TILE_VALUES = Array.from({ length: MAX_DOTS }, (_, index) => index + 1);
+
+const LEVELS: LevelSpec[] = [
+  {
+    id: 'starter',
+    label: 'Level 1',
+    description: 'Gentle flash for quick groups.',
+    minDots: 4,
+    maxDots: 10,
+    baseFlashMs: 1700,
+    perDotMs: 90,
+    minFlashMs: 1100,
+    maxFlashMs: 3200
+  },
+  {
+    id: 'challenger',
+    label: 'Level 2',
+    description: 'More dots with a brisk flash.',
+    minDots: 8,
+    maxDots: 20,
+    baseFlashMs: 1400,
+    perDotMs: 70,
+    minFlashMs: 1000,
+    maxFlashMs: 2600
+  },
+  {
+    id: 'expert',
+    label: 'Level 3',
+    description: 'Packed patterns and a speedy reveal.',
+    minDots: 12,
+    maxDots: 36,
+    baseFlashMs: 1200,
+    perDotMs: 60,
+    minFlashMs: 900,
+    maxFlashMs: 2200
+  }
+];
+
+type LevelId = (typeof LEVELS)[number]['id'];
+
+const INITIAL_LEVEL = LEVELS[0];
+
+const GLOBAL_MIN_DOTS = LEVELS[0].minDots;
+const GLOBAL_MAX_DOTS = LEVELS[LEVELS.length - 1].maxDots;
+const TILE_VALUES = Array.from({ length: GLOBAL_MAX_DOTS }, (_, index) => index + 1);
 
 const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
@@ -31,8 +84,7 @@ const shuffle = <T,>(values: T[]): T[] => {
   return copy;
 };
 
-const createDotPattern = (): DotPattern => {
-  const count = Math.floor(Math.random() * (MAX_DOTS - MIN_DOTS + 1)) + MIN_DOTS;
+const createDotPattern = (count: number): DotPattern => {
   const gridDimension = Math.ceil(Math.sqrt(count));
   const cellSize = 100 / gridDimension;
   const jitter = cellSize * 0.2;
@@ -64,51 +116,52 @@ const createDotPattern = (): DotPattern => {
   return { count, dots };
 };
 
+const getFlashDuration = (level: LevelSpec, count: number) =>
+  clamp(level.baseFlashMs + level.perDotMs * count, level.minFlashMs, level.maxFlashMs);
+
+const formatFlashDuration = (milliseconds: number) => `${(milliseconds / 1000).toFixed(1)}s`;
+
 const DotCountingGame = () => {
-  const [pattern, setPattern] = useState<DotPattern>(() => createDotPattern());
+  const [levelId, setLevelId] = useState<LevelId>(INITIAL_LEVEL.id);
+  const [pattern, setPattern] = useState<DotPattern>(() => createDotPattern(INITIAL_LEVEL.minDots));
   const [guess, setGuess] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [status, setStatus] = useState<'neutral' | 'correct' | 'incorrect'>('neutral');
-  const [selectedDots, setSelectedDots] = useState<Set<number>>(new Set());
+  const [isFlashVisible, setIsFlashVisible] = useState(true);
+  const [flashIteration, setFlashIteration] = useState(0);
 
-  useEffect(() => {
-    setSelectedDots(new Set());
-  }, [pattern]);
+  const level = useMemo(() => LEVELS.find((entry) => entry.id === levelId) ?? INITIAL_LEVEL, [levelId]);
 
-  const handleDotToggle = useCallback((id: number) => {
-    setSelectedDots((previous) => {
-      const next = new Set(previous);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
+  const flashDurationMs = useMemo(
+    () => getFlashDuration(level, pattern.count),
+    [level, pattern.count]
+  );
+
+  const availableTileValues = useMemo(
+    () => TILE_VALUES.filter((value) => value >= level.minDots && value <= level.maxDots),
+    [level.maxDots, level.minDots]
+  );
+
+  const sliderId = useId();
+  const sliderHintId = `${sliderId}-hint`;
 
   const dotElements = useMemo(
     () =>
       pattern.dots.map((dot) => {
-        const isSelected = selectedDots.has(dot.id);
         return (
-          <button
+          <span
             key={dot.id}
-            type="button"
-            className={classNames('dot-count-dot', { selected: isSelected })}
+            className="dot-count-dot"
             style={{
               left: `${dot.left}%`,
               top: `${dot.top}%`,
               width: `${dot.size}%`,
               height: `${dot.size}%`
             }}
-            onClick={() => handleDotToggle(dot.id)}
-            aria-pressed={isSelected}
-            aria-label={`Mark dot ${dot.id + 1} as ${isSelected ? 'uncounted' : 'counted'}`}
           />
         );
       }),
-    [handleDotToggle, pattern.dots, selectedDots]
+    [pattern.dots]
   );
 
   const handleTileSelect = useCallback((value: number) => {
@@ -125,36 +178,85 @@ const DotCountingGame = () => {
     }
 
     if (guess === pattern.count) {
-      setFeedback('Great counting! Tap “New dot pattern” for a fresh challenge.');
+      setFeedback('Great recall! Try a new pattern or bump the level for a tougher flash.');
       setStatus('correct');
     } else {
-      setFeedback('Not quite—use the glowing total above to try a different tile.');
+      setFeedback('Not quite—flash the dots again or try a different tile.');
       setStatus('incorrect');
     }
   };
 
   const handleNewPattern = () => {
-    setPattern(createDotPattern());
+    setPattern(createDotPattern(pattern.count));
     setGuess(null);
     setFeedback(null);
     setStatus('neutral');
+    setIsFlashVisible(true);
+    setFlashIteration((iteration) => iteration + 1);
   };
+
+  const handleFlashAgain = () => {
+    setIsFlashVisible(true);
+    setFlashIteration((iteration) => iteration + 1);
+  };
+
+  const handleLevelChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextLevelId = event.target.value as LevelId;
+    const nextLevel = LEVELS.find((entry) => entry.id === nextLevelId) ?? INITIAL_LEVEL;
+    setLevelId(nextLevelId);
+    const adjustedCount = clamp(pattern.count, nextLevel.minDots, nextLevel.maxDots);
+    setPattern(createDotPattern(adjustedCount));
+    setGuess(null);
+    setFeedback(null);
+    setStatus('neutral');
+    setIsFlashVisible(true);
+    setFlashIteration((iteration) => iteration + 1);
+  };
+
+  const handleDotCountChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextCount = Number(event.target.value);
+    const clampedCount = clamp(nextCount, level.minDots, level.maxDots);
+    setPattern(createDotPattern(clampedCount));
+    setGuess(null);
+    setFeedback(null);
+    setStatus('neutral');
+    setIsFlashVisible(true);
+    setFlashIteration((iteration) => iteration + 1);
+  };
+
+  useEffect(() => {
+    if (!isFlashVisible) {
+      return;
+    }
+    const timer = window.setTimeout(() => setIsFlashVisible(false), flashDurationMs);
+    return () => window.clearTimeout(timer);
+  }, [flashDurationMs, flashIteration, isFlashVisible]);
 
   const boxStatus = useMemo(() => {
     if (status === 'correct') {
-      return `Nice eyes! There are ${pattern.count} dots glowing.`;
+      return `Nice recall! ${pattern.count} dots flashed this round.`;
     }
     if (status === 'incorrect') {
-      return `There are ${pattern.count} dots shining in this pattern. Count again and try another tile.`;
+      return `There were ${pattern.count} dots in the flash. Try another pattern to keep practising.`;
     }
-    return 'Tap each dot as you count it, then choose the tile that matches your total.';
-  }, [pattern.count, status]);
+    return isFlashVisible
+      ? 'Watch closely! Count the glowing dots before they fade.'
+      : 'Dots hidden—lock in your total or flash them again for another peek.';
+  }, [isFlashVisible, pattern.count, status]);
+
+  const levelRangeLabel = useMemo(
+    () => `${level.minDots}–${level.maxDots} dots`,
+    [level.maxDots, level.minDots]
+  );
 
   return (
     <div className="learning-card">
       <header className="learning-card-header">
         <h4>Secret dot flash</h4>
-        <p>Count the glowing dots, mark them as you go, then choose the matching tile.</p>
+        <p>
+          Choose a level, watch the dots flash, and remember the total before they disappear. Tap a tile to
+          lock in your guess.
+        </p>
       </header>
       <div className="learning-card-body">
         <div
@@ -163,17 +265,83 @@ const DotCountingGame = () => {
             failure: status === 'incorrect'
           })}
         >
-          <div className="dot-count-display" role="img" aria-label={`A cluster of ${pattern.count} dots to count.`}>
-            {dotElements}
+          <div
+            className={classNames('dot-count-display', { concealed: !isFlashVisible })}
+            role="img"
+            aria-label={
+              isFlashVisible
+                ? 'A cluster of glowing dots to count quickly.'
+                : 'Dots hidden after the flash. Decide if you trust your total.'
+            }
+          >
+            <div className="dot-count-dots" aria-hidden={!isFlashVisible}>
+              {dotElements}
+            </div>
+            {!isFlashVisible && (
+              <div className="dot-count-cover" aria-hidden="true">
+                <span>Dots hidden! Trust your count or flash them again.</span>
+              </div>
+            )}
           </div>
           <span className="dot-count-message" role="status" aria-live="polite">
             {boxStatus}
           </span>
         </div>
+        <section className="dot-count-settings" aria-live="polite">
+          <fieldset className="dot-count-levels">
+            <legend>Challenge level</legend>
+            <div className="dot-count-level-grid">
+              {LEVELS.map((entry) => {
+                const isActive = entry.id === level.id;
+                return (
+                  <label
+                    key={entry.id}
+                    className={classNames('dot-count-level-option', { active: isActive })}
+                  >
+                    <input
+                      type="radio"
+                      name="dot-count-level"
+                      value={entry.id}
+                      checked={isActive}
+                      onChange={handleLevelChange}
+                    />
+                    <span className="dot-count-level-title">{entry.label}</span>
+                    <span className="dot-count-level-description">{entry.description}</span>
+                    <span className="dot-count-level-range">{entry.minDots}–{entry.maxDots} dots</span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+          <label className="field dot-count-slider" htmlFor={sliderId}>
+            <span className="field-label">Dots in the flash</span>
+            <input
+              id={sliderId}
+              type="range"
+              min={level.minDots}
+              max={level.maxDots}
+              step={1}
+              value={pattern.count}
+              onChange={handleDotCountChange}
+              aria-describedby={sliderHintId}
+              aria-valuetext={`${pattern.count} dots`}
+              disabled={level.minDots === level.maxDots}
+            />
+            <div className="dot-count-slider-values">
+              <output htmlFor={sliderId} aria-live="polite" aria-atomic="true">
+                {pattern.count}
+              </output>
+              <span>dots</span>
+            </div>
+            <p id={sliderHintId} className="field-hint">
+              {levelRangeLabel}. The dots stay visible for about {formatFlashDuration(flashDurationMs)}.
+            </p>
+          </label>
+        </section>
         <section className="learning-number-board" aria-live="polite">
-          <h5>How many dots are glowing?</h5>
+          <h5>How many dots flashed?</h5>
           <div className="learning-number-grid">
-            {TILE_VALUES.map((value) => {
+            {availableTileValues.map((value) => {
               const isChosen = guess === value;
               const isChecked = isChosen && status !== 'neutral';
               const stateClass = isChecked
@@ -205,13 +373,16 @@ const DotCountingGame = () => {
           <button type="button" className="primary" onClick={handleCheck}>
             Check my answer
           </button>
+          <button type="button" className="secondary" onClick={handleFlashAgain}>
+            Flash dots again
+          </button>
           <button type="button" className="secondary" onClick={handleNewPattern}>
             New dot pattern
           </button>
         </div>
         <div className={`learning-feedback ${status}`} role="status" aria-live="polite">
           <p id="dot-count-help">
-            {feedback ?? 'Tip: group the dots into smaller sets to make counting faster.'}
+            {feedback ?? 'Tip: look for friendly groups before the glow fades so you can recall them later.'}
           </p>
         </div>
       </div>
