@@ -98,6 +98,10 @@ Build runs TypeScript checks, emits Vite assets, and copies `index.html` to `404
 
 For GitHub Pages deployments, enable the included workflow (`.github/workflows/deploy.yml`) or host the generated output manually. Set `base` in `vite.config.ts` when publishing to a project sub-path.
 
+## Continuous integration
+
+A dedicated GitHub Actions workflow (`.github/workflows/ci.yml`) installs dependencies with `npm ci` and runs the production build on every pull request targeting `main`. Keep the build passing locally before opening a PR so the automated check succeeds.
+
 ## Optional Voice RSS configuration
 
 The Word Sound Builder can stream higher fidelity narration via [Voice RSS](https://www.voicerss.org/). Supply credentials via environment variables (e.g. `.env.local`):
