@@ -1,92 +1,114 @@
 # Shut the Box
 
-A TypeScript + React implementation of the classic pub game "Shut the Box". Configure tile ranges, scoring, and the one-die rule, then take turns closing tiles until somebody shuts the box or the lowest score wins.
+A TypeScript + React take on the pub classic. This single-page app recreates tabletop Shut the Box with configurable rules, best-move coaching, persistent scores, and a suite of kid-friendly learning mini games that reuse the tile interface. Use this reference to understand every feature before porting the experience to another stack or language.
 
-## Getting started
+## Quick start
 
 ```bash
 npm install
 npm run dev
 ```
 
-This launches Vite's development server (default port `5173`). Open the printed URL in your browser to start playing locally. Use the glowing dice tray to choose **Start game** or **Start new round**—the first tap now rolls immediately so play begins right away.
+The Vite development server (default port `5173`) serves the whole experience. The printed URL lands on the full game shell with responsive controls for desktop and touch layouts.
 
-## Game features
+## Core gameplay flow
 
-- Tile ranges: 1–9, 1–10, or 1–12.
-- Any number of hot-seat players with editable names.
-- Configurable one-die rule (after high tiles, when total &lt; 6, or never).
-- Scoring modes: lowest single-round remainder, cumulative race to a target, or instant win on a shut box.
-- Automatic detection of legal tile combinations for each roll, including highlights and optional "best move" hints.
-- Optional move-confirmation toggle so you can require approval before tiles close.
-- History log of every turn and instant win shout-outs.
-- Mobile board layout that keeps essential controls visible without scrolling.
-- Mobile header menu that collapses into a snug frame hugging the menu toggle so the dice line up as tightly as the Start Game button row, then expands again to push the board back down when reopened.
-- Desktop easter egg: double-click tile 12 to guarantee your next roll totals twelve.
-- Multiple presentation themes including the new **Tabletop felt** look inspired by the real wooden box.
-- Learning games toggle: use the **More Games** button next to the header hint controls to swap the main board for shape, dice-counting, dot flash, mixed-math, and word-sound mini games. The selected activity replaces the board with animated dice, fully drawn shapes, shimmering dot clusters, colourful equations, or letter tiles so you can practise together, answer with the familiar tiles (and extend beyond 12 when giant shapes appear), choose the operations and difficulty for the math mixer, and tap the illustration to hop to the next challenge before diving back into Shut the Box. The shape explorer lets you tap each glowing corner dot to mark it counted and shows the confirmed total right inside the display. The dot flash game now keeps up to 36 non-overlapping dots on screen, keeps the exact total hidden until you check your answer, lets you pick a level while each flash surprises you with a dot count inside that range on a timer that scales with the challenge, and swaps typing for Shut the Box-style tiles. The math mixer offers a Starter difficulty tailored for early learners and reveals the correct answer directly in the equation once you check your work. The Dice dot detective activity lets you pick between one and six dice so learners can focus on quick facts or stretch to bigger totals, then tap Shut the Box-style tiles to lock in their guess before revealing the roll. The Word sound builder lets you choose 2- to 6-letter words, tap each letter to hear it spoken, and replay the full word to confirm the pronunciation together. It now favours a child-friendly voice where your browser provides one, can use an optional Voice RSS key for a higher fidelity narrator, and speaks individual letters using lowercase sounds for early readers.
+- **Setup** – Configure options, add players, and keep the scoreboard from previous sessions thanks to localStorage persistence.
+- **Turn loop** – Roll automatically chooses two dice unless the one-die rule allows a single die. Players select open tiles whose sum matches the roll; optional confirmation prevents accidental closures.
+- **Round resolution** – The round ends once all players have no legal moves. Winners see a modal with round scores and ties handled explicitly. Optional instant-win triggers when a player shuts the entire box.
+- **Instructions overlay** – "How to Play" opens an accessible dialog that summarises the rules for new players.
 
-## Project structure
+## Rules & scoring configuration
 
-- `src/store`: Zustand state store with all core game logic.
-- `src/components`: UI building blocks (board, settings, players, history).
-- `src/utils`: Helper functions for tile combination generation and rule checks.
-- `src/styles`: Global and component styling.
+All knobs live inside the Settings panel:
 
-Feel free to deploy the production build with any static host after running `npm run build`.
-### Deploying to GitHub Pages
+| Option | Values | Behaviour |
+| --- | --- | --- |
+| Highest tile | 1–9, 1–10, 1–12 | Regenerates the tile strip outside active rounds. Hidden code `madness` unlocks a 1–56 variant for testing. |
+| One-die rule | After top tiles shut · When remainder < 6 · Never | Determines when the UI offers a single-die roll. |
+| Scoring mode | Lowest remainder · Cumulative race to target · Instant win | Adapts scorekeeping. Target mode enables a numeric goal input; instant mode forces the instant-win toggle on. |
+| Instant win on shut | Toggle | Grants the victory immediately when no tiles remain (also implied by instant scoring). |
+| Require confirmation | Toggle | Forces a confirmation tap before tiles close. |
+| Auto-retry on failure | Toggle | When paired with auto-play it restarts runs automatically. |
+| Show header details | Toggle | Expands the status chip row under the neon header. |
+| Show code tools | Toggle | Reveals a text box for cheat codes (`full`, `madness`, `takeover`). |
+| Theme | Neon glow · Matrix grid · Classic wood · Tabletop felt | Applies CSS theme classes to the body and `<html>`. |
+| Show learning games | Toggle | Swaps the main board for mini-game content when active. |
 
-This is a static Vite app. The `dist` folder contains a complete site (index.html + assets). To publish via GitHub Pages:
+Cheat codes perform extra tasks:
 
-1) Base path
+- `full` – Enables perfect-roll rigging for instant wins.
+- `madness` – Raises `maxTile` to 56 for giant boards.
+- `takeover` – Activates visible auto-play (uses best-move hints), auto-retry, and restarts the round.
 
-- If your Pages URL is `https://<user>.github.io/<repo>/` (project pages), set Vite `base` to `'/<repo>/'` in `vite.config.ts`:
+A double-click on tile 12 also triggers a secret forced double-six on the next roll.
 
-```ts
-// vite.config.ts
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+## Player management & history
 
-export default defineConfig({
-  plugins: [react()],
-  // IMPORTANT for project pages; replace <repo> with your repository name
-  // base: '/<repo>/'
-})
+- Add or remove hot-seat players in setup, rename them inline, and toggle per-player hints.
+- Track each player's last score and cumulative totals (for target mode) inside the roster.
+- A dedicated History panel records every roll, move, and shout-out. It also counts unfinished turns per player so you can gauge who leaves tiles standing.
+- The "Save scores" header action exports the persisted snapshot as `shut-the-box-scores.json` including round, phase, totals, and theme.
+
+Scores, round number, unfinished counts, previous winners, and the selected theme persist automatically in `localStorage` (`shut-the-box:scores`).
+
+## Assistive & automated play
+
+- Global hints illuminate legal tiles. Players can also toggle hints individually.
+- A rated "best move" highlights the preferred combination; auto-play uses this path.
+- Pending-turn toasts, restart countdowns, and end-turn acknowledgements keep multi-player sessions coordinated.
+- Auto-play banner lets hosts stop hands-free demos.
+- Optional move confirmation and the status tray guard against mis-taps on mobile.
+- Winner modal celebrates the round and supports ties; instructions modal provides quick rule refreshers.
+
+## Learning mini games
+
+Enable "Show learning games" and use the **More Games** button to swap out the main board. Each mini game reuses the app chrome and supports touch or mouse input:
+
+- **Word sound builder** – Choose 2–6 letter words, tap tiles to hear phonetic playback, and optionally stream higher-fidelity audio via Voice RSS. Falls back to Web Speech API or on-screen prompts when unavailable.
+- **Shape explorer** – Render regular polygons, custom quadrilaterals, circles, and ellipses. Tap glowing vertices to count corners; the UI tracks totals and supplies fun facts.
+- **Dice dot detective** – Pick 1–6 dice, predict the total with tile-style buttons, then reveal animated dice for immediate feedback.
+- **Secret dot flash** – Flash up to 36 non-overlapping dots for subitising practice. Adjustable difficulty controls dot range and flash timing.
+- **Math mixer** – Generate arithmetic equations (addition, subtraction, multiplication, division) with Starter and harder difficulty levels; reveal answers inline once checked.
+
+The active learning game is stored in state so returning to the board is a single click.
+
+## User interface & responsiveness
+
+- Mobile header condenses into a menu + status toggle; desktop keeps settings and history buttons inline.
+- Dice tray animates when rolls change and tracks the last meaningful roll for context.
+- Status chips display round, phase, active player, roster, previous winners, and hint state.
+- Progress meter shows percent of tiles closed, and toast notifications announce next turns.
+- Multiple CSS themes deliver neon, grid, wood, and felt aesthetics.
+
+## Architecture notes
+
+- **Framework** – React 18 + Vite 5 with TypeScript.
+- **State** – A single Zustand store (`src/store/gameStore.ts`) drives gameplay, learning modules, persistence, auto-play, and cheat codes.
+- **Logic helpers** – `src/utils/combinations.ts` and `src/utils/gameLogic.ts` generate legal moves, rate best combos, and enforce the one-die rule. `src/utils/id.ts` produces stable identifiers. `src/utils/storage.ts` handles persistence, and `src/utils/speech/voiceRss.ts` encapsulates the optional external TTS service.
+- **Components** – `src/components` contains panels for the board, settings, players, history, and each learning game. Styles live under `src/styles`.
+
+## Building & deploying
+
+```bash
+npm run build
 ```
 
-- If you use a custom domain or a user/org site (`https://<user>.github.io/`), you can leave `base` as default ('/').
+Build runs TypeScript checks, emits Vite assets, and copies `index.html` to `404.html` for SPA routing on static hosts. Serve the `dist/` directory with any static provider.
 
-2) SPA fallback
+For GitHub Pages deployments, enable the included workflow (`.github/workflows/deploy.yml`) or host the generated output manually. Set `base` in `vite.config.ts` when publishing to a project sub-path.
 
-The build step copies `index.html` to `404.html` so client‑side routes work on Pages.
+## Optional Voice RSS configuration
 
-3) GitHub Actions workflow
+The Word Sound Builder can stream higher fidelity narration via [Voice RSS](https://www.voicerss.org/). Supply credentials via environment variables (e.g. `.env.local`):
 
-The repo includes `.github/workflows/deploy.yml` that:
-- builds the app on pushes to `main`/`master`
-- uploads `dist` as the Pages artifact
-- deploys it to GitHub Pages
+```env
+VITE_VOICERSS_KEY=your-api-key
+VITE_VOICERSS_LANGUAGE=en-gb
+VITE_VOICERSS_VOICE=Linda
+VITE_VOICERSS_AUDIO_FORMAT=44khz_16bit_mono
+VITE_VOICERSS_RATE=-1
+```
 
-Enable GitHub Pages in the repo: Settings → Pages → Build and deployment → Source = GitHub Actions.
+Without a key, the app gracefully falls back to the browser's Web Speech voices or on-screen guidance.
 
-4) Environment variables
-
-If you use Contentful (or any env vars), add them as Repository → Settings → Secrets and variables → Actions → Variables, then reference via `VITE_...` when building.
-
-### Enhanced Word sound builder voice (optional)
-
-The Word sound builder can stream higher fidelity narration through [Voice RSS](https://www.voicerss.org/) when you provide an API key. Without it, the mini game falls back to the browser's built-in speech synthesis.
-
-1. Create a free Voice RSS account and copy your API key.
-2. Add the key to a `.env.local` file (or your deployment environment) as `VITE_VOICERSS_KEY`.
-3. (Optional) Override the default language, voice, audio format, or playback rate:
-
-   ```env
-   VITE_VOICERSS_KEY=your-api-key-here
-   VITE_VOICERSS_LANGUAGE=en-gb
-   VITE_VOICERSS_VOICE=Linda
-   VITE_VOICERSS_AUDIO_FORMAT=44khz_16bit_mono
-   VITE_VOICERSS_RATE=-1
-   ```
-
-The client automatically cancels any in-flight request if you trigger a new word or letter, and gracefully reverts to the browser voice (or text-only practise guidance) when the remote service is unavailable.
